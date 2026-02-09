@@ -1,5 +1,6 @@
 /**
  * SMI Before/After Comparison Slider
+ * Uses wrapper width approach instead of clip-path for better compatibility
  */
 (function() {
     'use strict';
@@ -8,10 +9,10 @@
         const sliders = document.querySelectorAll('.smi-comparison-slider');
         
         sliders.forEach(function(slider) {
-            const afterImg = slider.querySelector('.smi-comparison-after');
+            const beforeWrap = slider.querySelector('.smi-comparison-before-wrap');
             const handle = slider.querySelector('.smi-comparison-handle');
             
-            if (!afterImg || !handle) return;
+            if (!beforeWrap || !handle) return;
             
             let isDragging = false;
             
@@ -20,15 +21,11 @@
                 let percentage = ((x - rect.left) / rect.width) * 100;
                 percentage = Math.max(0, Math.min(100, percentage));
                 
-                // Clip from left: at 50% position, hide left 50% of after (show right 50%)
-                // Dragging right reveals more of the "after" on the right side
-                const clipValue = 'inset(0 0 0 ' + percentage + '%)';
-                afterImg.style.clipPath = clipValue;
-                // Also apply to nested img if afterImg is a picture element
-                const nestedImg = afterImg.querySelector('img');
-                if (nestedImg) {
-                    nestedImg.style.clipPath = clipValue;
-                }
+                // Set the width of the before wrapper
+                // At 50%: before wrapper is 50% wide (showing left half blurry)
+                // At 0%: before wrapper is 0% wide (showing all sharp)
+                // At 100%: before wrapper is 100% wide (showing all blurry)
+                beforeWrap.style.width = percentage + '%';
                 handle.style.left = percentage + '%';
             }
             
