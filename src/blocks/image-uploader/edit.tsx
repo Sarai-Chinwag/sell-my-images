@@ -11,8 +11,19 @@ import {
     RangeControl,
     ToggleControl 
 } from '@wordpress/components';
+import type { BlockEditProps } from '@wordpress/blocks';
 
-export default function Edit( { attributes, setAttributes } ) {
+/**
+ * Block attributes interface
+ */
+interface ImageUploaderAttributes {
+    title: string;
+    description: string;
+    maxFileSize: number;
+    showTermsLink: boolean;
+}
+
+export default function Edit( { attributes, setAttributes }: BlockEditProps< ImageUploaderAttributes > ): JSX.Element {
     const { title, description, maxFileSize, showTermsLink } = attributes;
     const blockProps = useBlockProps( {
         className: 'smi-image-uploader-editor',
@@ -25,24 +36,24 @@ export default function Edit( { attributes, setAttributes } ) {
                     <TextControl
                         label={ __( 'Title', 'sell-my-images' ) }
                         value={ title }
-                        onChange={ ( value ) => setAttributes( { title: value } ) }
+                        onChange={ ( value: string ) => setAttributes( { title: value } ) }
                     />
                     <TextareaControl
                         label={ __( 'Description', 'sell-my-images' ) }
                         value={ description }
-                        onChange={ ( value ) => setAttributes( { description: value } ) }
+                        onChange={ ( value: string ) => setAttributes( { description: value } ) }
                     />
                     <RangeControl
                         label={ __( 'Max File Size (MB)', 'sell-my-images' ) }
                         value={ maxFileSize }
-                        onChange={ ( value ) => setAttributes( { maxFileSize: value } ) }
+                        onChange={ ( value ) => setAttributes( { maxFileSize: value ?? 10 } ) }
                         min={ 1 }
                         max={ 25 }
                     />
                     <ToggleControl
                         label={ __( 'Show Terms & Conditions Link', 'sell-my-images' ) }
                         checked={ showTermsLink }
-                        onChange={ ( value ) => setAttributes( { showTermsLink: value } ) }
+                        onChange={ ( value: boolean ) => setAttributes( { showTermsLink: value } ) }
                     />
                 </PanelBody>
             </InspectorControls>
