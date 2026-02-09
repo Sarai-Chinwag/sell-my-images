@@ -1,0 +1,48 @@
+/**
+ * Editor styles for Comparison Slider block
+ */
+
+.wp-block-smi-comparison-slider {
+    .smi-comparison-editor-preview {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .smi-comparison-preview-image {
+        position: relative;
+        
+        img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+    }
+
+    .smi-comparison-preview-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        span {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+    }
+
+    .smi-comparison-preview-actions {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        background: #f5f5f5;
+        justify-content: center;
+    }
+}

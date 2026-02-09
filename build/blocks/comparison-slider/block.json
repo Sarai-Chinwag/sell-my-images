@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "smi/comparison-slider",
+  "version": "1.0.0",
+  "title": "Before/After Comparison",
+  "category": "media",
+  "icon": "image-flip-horizontal",
+  "description": "Show a before/after comparison slider to demonstrate upscaling quality.",
+  "keywords": [
+    "compare",
+    "before",
+    "after",
+    "slider",
+    "upscale",
+    "quality"
+  ],
+  "supports": {
+    "html": false,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  },
+  "attributes": {
+    "imageId": {
+      "type": "number"
+    },
+    "imageUrl": {
+      "type": "string"
+    },
+    "blurAmount": {
+      "type": "number",
+      "default": 2
+    },
+    "initialPosition": {
+      "type": "number",
+      "default": 50
+    }
+  },
+  "textdomain": "sell-my-images",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "viewScript": "file:./view.js",
+  "render": "file:./render.php"
+}
