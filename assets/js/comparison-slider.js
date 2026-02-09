@@ -20,7 +20,9 @@
                 let percentage = ((x - rect.left) / rect.width) * 100;
                 percentage = Math.max(0, Math.min(100, percentage));
                 
-                const clipValue = 'inset(0 ' + (100 - percentage) + '% 0 0)';
+                // Clip from left: at 50% position, hide left 50% of after (show right 50%)
+                // Dragging right reveals more of the "after" on the right side
+                const clipValue = 'inset(0 0 0 ' + percentage + '%)';
                 afterImg.style.clipPath = clipValue;
                 // Also apply to nested img if afterImg is a picture element
                 const nestedImg = afterImg.querySelector('img');
