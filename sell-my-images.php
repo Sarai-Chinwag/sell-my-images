@@ -62,7 +62,8 @@ class SellMyImages {
     private function init_hooks() {
         add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
         add_action( 'init', array( $this, 'init' ) );
-    add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+        add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+        add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_comparison_slider' ) );
         add_action( 'smi_daily_cleanup', array( $this, 'run_daily_cleanup' ) );
 
         // Plugin activation/deactivation hooks
@@ -183,6 +184,31 @@ class SellMyImages {
         
         // Output modal HTML to footer
         add_action( 'wp_footer', array( $this, 'output_modal_html' ) );
+    }
+
+    /**
+     * Enqueue comparison slider assets on upscale page
+     */
+    public function enqueue_comparison_slider() {
+        // Only load on the upscale page
+        if ( ! is_page( 'upscale' ) ) {
+            return;
+        }
+        
+        wp_enqueue_style(
+            'smi-comparison-slider',
+            SMI_PLUGIN_URL . 'assets/css/comparison-slider.css',
+            array(),
+            SMI_VERSION
+        );
+        
+        wp_enqueue_script(
+            'smi-comparison-slider',
+            SMI_PLUGIN_URL . 'assets/js/comparison-slider.js',
+            array(),
+            SMI_VERSION,
+            true
+        );
     }
     
     public function output_modal_html() {
