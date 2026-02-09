@@ -1,15 +1,15 @@
 /**
  * Comparison Slider - Frontend interactivity
  */
-( function () {
+( function (): void {
     'use strict';
 
-    function initComparisonSliders() {
-        const sliders = document.querySelectorAll( '.smi-comparison-slider' );
+    function initComparisonSliders(): void {
+        const sliders = document.querySelectorAll< HTMLElement >( '.smi-comparison-slider' );
 
-        sliders.forEach( function ( slider ) {
-            const beforeWrap = slider.querySelector( '.smi-comparison-before-wrap' );
-            const handle = slider.querySelector( '.smi-comparison-handle' );
+        sliders.forEach( ( slider: HTMLElement ): void => {
+            const beforeWrap = slider.querySelector< HTMLElement >( '.smi-comparison-before-wrap' );
+            const handle = slider.querySelector< HTMLElement >( '.smi-comparison-handle' );
 
             if ( ! beforeWrap || ! handle ) {
                 return;
@@ -17,34 +17,34 @@
 
             let isDragging = false;
 
-            function updatePosition( x ) {
+            function updatePosition( x: number ): void {
                 const rect = slider.getBoundingClientRect();
                 let percentage = ( ( x - rect.left ) / rect.width ) * 100;
                 percentage = Math.max( 0, Math.min( 100, percentage ) );
 
-                beforeWrap.style.width = percentage + '%';
-                handle.style.left = percentage + '%';
+                beforeWrap!.style.width = percentage + '%';
+                handle!.style.left = percentage + '%';
             }
 
-            function onStart( e ) {
+            function onStart( e: MouseEvent | TouchEvent ): void {
                 isDragging = true;
                 slider.style.cursor = 'grabbing';
                 e.preventDefault();
             }
 
-            function onMove( e ) {
+            function onMove( e: MouseEvent | TouchEvent ): void {
                 if ( ! isDragging ) {
                     return;
                 }
 
                 const x = e.type.includes( 'touch' )
-                    ? e.touches[ 0 ].clientX
-                    : e.clientX;
+                    ? ( e as TouchEvent ).touches[ 0 ].clientX
+                    : ( e as MouseEvent ).clientX;
 
                 updatePosition( x );
             }
 
-            function onEnd() {
+            function onEnd(): void {
                 isDragging = false;
                 slider.style.cursor = 'ew-resize';
             }
@@ -60,7 +60,7 @@
             document.addEventListener( 'touchend', onEnd );
 
             // Click to jump
-            slider.addEventListener( 'click', function ( e ) {
+            slider.addEventListener( 'click', ( e: MouseEvent ): void => {
                 if ( ! isDragging ) {
                     updatePosition( e.clientX );
                 }

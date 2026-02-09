@@ -10,7 +10,13 @@
     "packages-update": "wp-scripts packages-update"
   },
   "devDependencies": {
-    "@wordpress/scripts": "^28.0.0"
+    "@types/wordpress__block-editor": "^15.0.0",
+    "@types/wordpress__blocks": "^15.10.0",
+    "@types/wordpress__components": "^23.0.12",
+    "@types/wordpress__element": "^2.4.1",
+    "@types/wordpress__i18n": "^3.4.0",
+    "@wordpress/scripts": "^28.0.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@wordpress/block-editor": "^14.0.0",

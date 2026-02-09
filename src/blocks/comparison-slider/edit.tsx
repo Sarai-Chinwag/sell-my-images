@@ -4,22 +4,41 @@
 import { __ } from '@wordpress/i18n';
 import { useBlockProps, MediaUpload, MediaUploadCheck, InspectorControls } from '@wordpress/block-editor';
 import { PanelBody, Button, RangeControl, Placeholder } from '@wordpress/components';
+import type { BlockEditProps } from '@wordpress/blocks';
+
+/**
+ * Block attributes interface
+ */
+interface ComparisonSliderAttributes {
+    imageId?: number;
+    imageUrl?: string;
+    blurAmount: number;
+    initialPosition: number;
+}
+
+/**
+ * Media object interface
+ */
+interface MediaObject {
+    id: number;
+    url: string;
+}
 
 /**
  * Edit component
  */
-export default function Edit( { attributes, setAttributes } ) {
+export default function Edit( { attributes, setAttributes }: BlockEditProps< ComparisonSliderAttributes > ): JSX.Element {
     const { imageId, imageUrl, blurAmount, initialPosition } = attributes;
     const blockProps = useBlockProps();
 
-    const onSelectImage = ( media ) => {
+    const onSelectImage = ( media: MediaObject ): void => {
         setAttributes( {
             imageId: media.id,
             imageUrl: media.url,
         } );
     };
 
-    const onRemoveImage = () => {
+    const onRemoveImage = (): void => {
         setAttributes( {
             imageId: undefined,
             imageUrl: undefined,
@@ -33,7 +52,7 @@ export default function Edit( { attributes, setAttributes } ) {
                     <RangeControl
                         label={ __( 'Blur Amount', 'sell-my-images' ) }
                         value={ blurAmount }
-                        onChange={ ( value ) => setAttributes( { blurAmount: value } ) }
+                        onChange={ ( value ) => setAttributes( { blurAmount: value ?? 2 } ) }
                         min={ 0 }
                         max={ 10 }
                         step={ 0.5 }
@@ -42,7 +61,7 @@ export default function Edit( { attributes, setAttributes } ) {
                     <RangeControl
                         label={ __( 'Initial Position', 'sell-my-images' ) }
                         value={ initialPosition }
-                        onChange={ ( value ) => setAttributes( { initialPosition: value } ) }
+                        onChange={ ( value ) => setAttributes( { initialPosition: value ?? 50 } ) }
                         min={ 0 }
                         max={ 100 }
                         help={ __( 'Where the slider starts (0=all enhanced, 100=all original)', 'sell-my-images' ) }
