@@ -1,7 +1,6 @@
 /* Before/After Image Comparison Slider */
 .smi-comparison-container {
-    max-width: 600px;
-    margin: 2rem auto;
+    margin: 2rem 0;
     font-family: inherit;
 }
 
@@ -23,7 +22,8 @@
     -webkit-user-select: none;
 }
 
-.smi-comparison-slider img {
+.smi-comparison-slider img,
+.smi-comparison-slider picture {
     position: absolute;
     top: 0;
     left: 0;
@@ -33,14 +33,21 @@
     pointer-events: none;
 }
 
-.smi-comparison-before {
+.smi-comparison-slider picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.smi-comparison-before,
+.smi-comparison-before img {
     z-index: 1;
     /* Simulate low-res with noticeable blur to show upscaling benefit */
     filter: blur(1.5px) saturate(0.9);
-    image-rendering: pixelated;
 }
 
-.smi-comparison-after {
+.smi-comparison-after,
+.smi-comparison-after img {
     z-index: 2;
     clip-path: inset(0 50% 0 0);
 }

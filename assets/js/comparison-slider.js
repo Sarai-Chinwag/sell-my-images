@@ -20,7 +20,13 @@
                 let percentage = ((x - rect.left) / rect.width) * 100;
                 percentage = Math.max(0, Math.min(100, percentage));
                 
-                afterImg.style.clipPath = 'inset(0 ' + (100 - percentage) + '% 0 0)';
+                const clipValue = 'inset(0 ' + (100 - percentage) + '% 0 0)';
+                afterImg.style.clipPath = clipValue;
+                // Also apply to nested img if afterImg is a picture element
+                const nestedImg = afterImg.querySelector('img');
+                if (nestedImg) {
+                    nestedImg.style.clipPath = clipValue;
+                }
                 handle.style.left = percentage + '%';
             }
             
