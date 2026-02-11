@@ -1,76 +1,94 @@
 # Sell My Images
 
-Monetize WordPress images with AI-upscaled downloads via Stripe — visitors click, pay, and receive enhanced hi-res versions.
+Monetize WordPress images with AI-upscaled downloads via Stripe. Visitors click, pay, and receive enhanced hi-res versions.
 
-## What It Does
+## Description
 
-Sell My Images turns any WordPress image into a purchasable product:
+Sell My Images automatically adds "Download Hi-Res" buttons to Gutenberg image blocks and featured images. When a visitor clicks, they pay via Stripe Checkout, the image is AI-upscaled (4x or 8x) via Upsampler.com, and a secure download link is emailed to them.
 
-- **Automatic buttons** — Adds "Download Hi-Res" to all Gutenberg image blocks
-- **AI upscaling** — 4x or 8x resolution enhancement via Upsampler.com
-- **Secure payments** — Stripe checkout with test/live mode support
-- **Smart delivery** — Token-based downloads with automatic expiration
+## Requirements
 
-## How It Works
+- WordPress 6.9+
+- PHP 8.1+
+- SSL certificate (required for Stripe)
+- [Stripe Integration](https://wordpress.org/plugins/stripe-integration/) plugin (declared dependency via `Requires Plugins` header)
+- Stripe account
+- [Upsampler.com](https://upsampler.com) account
 
+## Installation
+
+```bash
+git clone https://github.com/Sarai-Chinwag/sell-my-images.git
+cd sell-my-images && composer install
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   VISITOR   │ ──▶ │   STRIPE    │ ──▶ │  UPSAMPLER  │ ──▶ │  DOWNLOAD   │
-│  Clicks     │     │  Payment    │     │  AI 4x/8x   │     │  Hi-Res     │
-│  Button     │     │  Checkout   │     │  Upscale    │     │  Delivery   │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-```
 
-Payment → Processing → Email notification → Secure download link (auto-expires)
+1. Ensure the **Stripe Integration** plugin is installed and activated first.
+2. Upload `sell-my-images` to `wp-content/plugins/`.
+3. Activate in WordPress admin.
 
-## Features
+## Configuration
 
-| Feature | Description |
-|---------|-------------|
-| **Display Control** | Show/hide buttons by post type, category, tag, or specific posts |
-| **Pricing** | Configurable markup percentage over Upsampler costs |
-| **Analytics** | Track clicks, conversions, and revenue per post/image |
-| **Refunds** | Automatic Stripe refunds if upscaling fails |
-| **Mobile** | Responsive design works on all devices |
+Go to **Sell My Images** in the WordPress admin sidebar:
 
-## Display Modes
+- **API Configuration** — Stripe keys (test/live) and Upsampler API key
+- **Display Control** — Choose where buttons appear: all posts, exclude selected, or include only specific posts/categories/tags
+- **Download Settings** — Markup percentage, download link expiry, button text
 
-| Mode | Use Case |
-|------|----------|
-| **All Posts** | Monetize everything (default) |
-| **Exclude Selected** | Hide on "Free Resources" category |
-| **Include Only** | Show only on "Portfolio" posts |
+## Usage
+
+Once configured, the plugin automatically:
+
+1. Adds download buttons to qualifying image blocks and featured images
+2. Creates Stripe Checkout sessions on click
+3. Processes webhooks for payment confirmation
+4. Queues upscaling jobs
+5. Emails download links on completion
+6. Auto-refunds via Stripe if upscaling fails
+
+### Admin Pages
+
+- **Jobs** — View/manage upscaling jobs, retry failed jobs, resend emails
+- **Analytics** — Track clicks, conversions, and revenue per post/image
+- **Settings** — All configuration options
+
+### Webhook Endpoint
+
+Stripe webhooks are received at `/smi-webhook/stripe/` (registered via `parse_request`).
+
+### Gutenberg Blocks
+
+- **Image Uploader** — Upload interface block
+- **Comparison Slider** — Before/after comparison block
 
 ## Third-Party Services
-
-This plugin transmits data to external services:
 
 | Service | Purpose | Data Sent |
 |---------|---------|-----------|
 | [Stripe](https://stripe.com) | Payment processing | Email, amount, transaction metadata |
 | [Upsampler.com](https://upsampler.com) | AI image enhancement | Image URLs, upscale parameters |
 
-No payment card data touches your server. Review service terms before use.
+No payment card data touches your server.
 
-## Requirements
+## Hooks/Filters
 
-- WordPress 5.0+ (Gutenberg)
-- PHP 7.4+
-- SSL certificate (required for Stripe)
-- Stripe account + Upsampler.com account
+| Hook | Type | Description |
+|------|------|-------------|
+| `smi_load_assets` | Filter | Control whether frontend assets load on the current page |
+| `smi_button_text` | Filter | Customize the download button text |
+| `smi_min_image_size` | Filter | Minimum image dimensions to show button (default from Constants) |
+| `smi_download_chunk_size` | Filter | Download streaming chunk size |
+| `smi_max_webhook_payload_size` | Filter | Maximum webhook payload size |
+| `smi_payment_completed` | Action | Fired after successful payment (receives job ID and context) |
+| `smi_job_status_changed` | Action | Fired on job status transition (receives job ID, old status, new status, data) |
+| `smi_daily_cleanup` | Action | Scheduled daily cleanup of expired downloads |
 
-## Installation
+### Abilities API
 
-```bash
-# Clone and install dependencies
-git clone https://github.com/Sarai-Chinwag/sell-my-images.git
-cd sell-my-images && composer install
+Registers abilities via the WordPress Abilities API:
 
-# Configure in WordPress Admin → Sell My Images
-# 1. API Configuration: Add Stripe + Upsampler keys
-# 2. Display Control: Choose where buttons appear
-# 3. Download Settings: Set pricing and expiry
-```
+- **Analytics abilities** — Query click/conversion data
+- **Inventory abilities** — Query available images and job status
+- **Upload abilities** — Programmatic image upload
 
 ## Development
 
@@ -88,11 +106,7 @@ stripe listen --forward-to=https://yoursite.local/smi-webhook/stripe/
 - [AGENTS.md](AGENTS.md) — Technical architecture and implementation details
 - [docs/](docs/) — API documentation
 
-## Live Demo
-
-See it in action at [saraichinwag.com](https://saraichinwag.com)
-
 ---
 
-**License**: GPL v2+  
-**Author**: [Chris Huber](https://chubes.net)
+**License:** GPL v2+
+**Author:** [Chris Huber](https://chubes.net)
