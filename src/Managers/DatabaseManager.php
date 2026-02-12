@@ -370,6 +370,26 @@ class DatabaseManager {
         $cutoff_date = gmdate( 'Y-m-d H:i:s', strtotime( "-{$cleanup_hours} hours" ) );
         $cleaned_count = 0;
 
+        // Sweep stale awaiting_payment jobs older than cleanup threshold
+        $stale_jobs = $wpdb->get_results( $wpdb->prepare(
+            "SELECT job_id FROM $table WHERE status = %s AND created_at < %s",
+            'awaiting_payment',
+            $cutoff_date
+        ) );
+
+        foreach ( $stale_jobs as $job ) {
+            $updated = $wpdb->update(
+                $table,
+                array( 'status' => 'abandoned' ),
+                array( 'job_id' => $job->job_id ),
+                array( '%s' ),
+                array( '%s' )
+            );
+            if ( $updated ) {
+                error_log( 'SMI: Stale awaiting_payment job ' . $job->job_id . ' marked as abandoned' );
+            }
+        }
+
         // Get abandoned jobs older than cleanup threshold
         $abandoned_jobs = $wpdb->get_results( $wpdb->prepare(
             "SELECT job_id, upscaled_file_path FROM $table
