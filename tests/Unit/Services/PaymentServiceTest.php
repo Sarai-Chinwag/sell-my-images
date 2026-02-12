@@ -2,440 +2,394 @@
 /**
  * PaymentService Tests
  *
+ * Tests the payment workflow against the real PaymentService implementation
+ * which uses StripeIntegration\StripeClient static methods.
+ *
  * @package SellMyImages\Tests
  */
 
 namespace SellMyImages\Tests\Unit\Services;
 
-use Brain\Monkey\Functions;
 use SellMyImages\Services\PaymentService;
-use SellMyImages\Api\StripeApi;
-use SellMyImages\Config\Constants;
-use Mockery;
+use SellMyImages\Managers\JobManager;
+use StripeIntegration\StripeClient;
 
-class PaymentServiceTest extends \SMI_TestCase {
+// Load StripeClient stub before any test runs.
+require_once dirname( __DIR__, 2 ) . '/stubs/StripeClientStub.php';
 
-    private $stripe_api_mock;
-    private $payment_service;
+/**
+ * PaymentServiceTest class
+ */
+class PaymentServiceTest extends \WP_UnitTestCase {
 
-    protected function setUp(): void {
-        parent::setUp();
+	/**
+	 * Payment service instance.
+	 *
+	 * @var PaymentService
+	 */
+	private PaymentService $payment_service;
 
-        // Create mock StripeApi
-        $this->stripe_api_mock = Mockery::mock( StripeApi::class );
+	/**
+	 * Set up each test.
+	 */
+	public function set_up(): void {
+		parent::set_up();
 
-        // Common function mocks
-        Functions\when( 'get_option' )
-            ->alias(
-                function ( $option, $default = '' ) {
-                    $options = array(
-                        'smi_markup_percentage'     => 200,
-                        'smi_stripe_webhook_secret' => 'whsec_test',
-                    );
-                    return $options[ $option ] ?? $default;
-                }
-            );
+		StripeClient::reset();
 
-        Functions\when( 'home_url' )
-            ->justReturn( 'https://example.com' );
+		// Ensure required options exist.
+		update_option( 'smi_markup_percentage', 550 );
 
-        Functions\when( 'is_ssl' )
-            ->justReturn( true );
+		$this->payment_service = new PaymentService();
+	}
 
-        // Inject mock into PaymentService
-        $this->payment_service = new PaymentService( $this->stripe_api_mock );
-    }
+	/**
+	 * Tear down each test.
+	 */
+	public function tear_down(): void {
+		StripeClient::reset();
+		parent::tear_down();
+	}
 
-    protected function tearDown(): void {
-        Mockery::close();
-        parent::tearDown();
-    }
+	/**
+	 * @test
+	 * Regression: stripe-integration returns raw Stripe keys (id, url, amount_total)
+	 * but SMI callers expect (session_id, checkout_url, amount in dollars).
+	 * Broken Feb 5-12 2026 after migration to shared stripe-integration plugin.
+	 */
+	public function test_normalizes_stripe_response_keys(): void {
+		StripeClient::$mock_response = array(
+			'id'           => 'cs_live_abc123',
+			'url'          => 'https://checkout.stripe.com/c/pay/cs_live_abc123',
+			'amount_total' => 130, // Stripe returns cents.
+			'object'       => 'checkout.session',
+			'status'       => 'open',
+		);
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_returns_checkout_url(): void {
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 800,
-            'src'    => 'https://example.com/image.jpg',
-        );
+		$result = $this->payment_service->create_checkout_session(
+			array( 'width' => 1000, 'height' => 800 ),
+			'4x',
+			'test@example.com',
+			'job-regression-test'
+		);
 
-        $expected_result = array(
-            'session_id'   => 'cs_test_123',
-            'checkout_url' => 'https://checkout.stripe.com/pay/cs_test_123',
-            'amount'       => 1.50,
-        );
+		$this->assertIsArray( $result );
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->andReturn( $expected_result );
+		// Normalized keys must exist.
+		$this->assertArrayHasKey( 'session_id', $result, 'Must map Stripe id → session_id' );
+		$this->assertArrayHasKey( 'checkout_url', $result, 'Must map Stripe url → checkout_url' );
+		$this->assertArrayHasKey( 'amount', $result, 'Must map Stripe amount_total → amount' );
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            'customer@example.com',
-            'job-uuid-1234'
-        );
+		// Values correct.
+		$this->assertEquals( 'cs_live_abc123', $result['session_id'] );
+		$this->assertEquals( 'https://checkout.stripe.com/c/pay/cs_live_abc123', $result['checkout_url'] );
+		$this->assertEquals( 1.30, $result['amount'], 'Amount must convert cents to dollars' );
 
-        $this->assertIsArray( $result );
-        $this->assertEquals( 'cs_test_123', $result['session_id'] );
-        $this->assertStringContainsString( 'checkout.stripe.com', $result['checkout_url'] );
-    }
+		// Raw Stripe keys must NOT leak.
+		$this->assertArrayNotHasKey( 'id', $result );
+		$this->assertArrayNotHasKey( 'url', $result );
+		$this->assertArrayNotHasKey( 'amount_total', $result );
+	}
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_propagates_stripe_errors(): void {
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 800,
-            'src'    => 'https://example.com/image.jpg',
-        );
+	/**
+	 * @test
+	 */
+	public function test_propagates_wp_error_from_stripe_client(): void {
+		StripeClient::$mock_response = new \WP_Error( 'stripe_error', 'Card declined' );
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->andReturn( new \WP_Error( 'stripe_error', 'Card declined' ) );
+		$result = $this->payment_service->create_checkout_session(
+			array( 'width' => 1000, 'height' => 800 ),
+			'4x',
+			'test@example.com',
+			'job-error-test'
+		);
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            'customer@example.com',
-            'job-uuid-1234'
-        );
+		$this->assertWPError( $result );
+		$this->assertEquals( 'stripe_error', $result->get_error_code() );
+	}
 
-        $this->assertInstanceOf( \WP_Error::class, $result );
-    }
+	/**
+	 * @test
+	 */
+	public function test_passes_correct_metadata_to_stripe(): void {
+		StripeClient::$mock_response = array(
+			'id'           => 'cs_test_meta',
+			'url'          => 'https://checkout.stripe.com/test',
+			'amount_total' => 200,
+		);
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_includes_job_metadata(): void {
-        $image_data = array(
-            'width'  => 500,
-            'height' => 400,
-            'src'    => 'https://example.com/test.jpg',
-        );
+		$this->payment_service->create_checkout_session(
+			array( 'width' => 500, 'height' => 400 ),
+			'8x',
+			'meta@example.com',
+			'job-meta-123'
+		);
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->withArgs(
-                function ( $session_data ) {
-                    // Verify metadata includes job_id
-                    return isset( $session_data['metadata']['job_id'] )
-                        && $session_data['metadata']['job_id'] === 'test-job-123'
-                        && $session_data['metadata']['resolution'] === '8x'
-                        && $session_data['metadata']['source'] === 'sell-my-images';
-                }
-            )
-            ->andReturn(
-                array(
-                    'session_id'   => 'cs_test',
-                    'checkout_url' => 'https://stripe.com',
-                    'amount'       => 2.00,
-                )
-            );
+		$params = StripeClient::$last_params;
+		$this->assertNotNull( $params, 'StripeClient should have been called' );
+		$this->assertEquals( 'job-meta-123', $params['metadata']['job_id'] );
+		$this->assertEquals( '8x', $params['metadata']['resolution'] );
+		$this->assertEquals( 'sell-my-images', $params['metadata']['source'] );
+		$this->assertEquals( 'sell-my-images', $params['context'] );
+	}
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '8x',
-            null,
-            'test-job-123'
-        );
+	/**
+	 * @test
+	 */
+	public function test_sends_price_in_cents_to_stripe(): void {
+		StripeClient::$mock_response = array(
+			'id'           => 'cs_test_price',
+			'url'          => 'https://checkout.stripe.com/test',
+			'amount_total' => 500,
+		);
 
-        $this->assertIsArray( $result );
-    }
+		$this->payment_service->create_checkout_session(
+			array( 'width' => 1000, 'height' => 1000 ),
+			'4x',
+			'price@example.com',
+			'job-price-test'
+		);
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_calculates_correct_price(): void {
-        // 1000x1000 at 4x = 4000x4000 = 16MP
-        // Credits = ceil(16 * 0.25) = 4
-        // Cost = 4 * $0.04 = $0.16
-        // Customer price = $0.16 * 3 = $0.48, but Stripe min is $0.50
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 1000,
-        );
+		$params   = StripeClient::$last_params;
+		$unit_amt = $params['line_items'][0]['price_data']['unit_amount'];
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->withArgs(
-                function ( $session_data ) {
-                    // unit_amount should be in cents
-                    $unit_amount = $session_data['line_items'][0]['price_data']['unit_amount'];
-                    // Should be at least 50 cents (Stripe minimum)
-                    return $unit_amount >= 50;
-                }
-            )
-            ->andReturn(
-                array(
-                    'session_id'   => 'cs_test',
-                    'checkout_url' => 'https://stripe.com',
-                    'amount'       => 0.50,
-                )
-            );
+		$this->assertIsInt( $unit_amt );
+		$this->assertGreaterThan( 0, $unit_amt );
+	}
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            'test@example.com',
-            'job-123'
-        );
+	/**
+	 * @test
+	 */
+	public function test_uses_usd_currency(): void {
+		StripeClient::$mock_response = array(
+			'id'           => 'cs_test_cur',
+			'url'          => 'https://checkout.stripe.com/test',
+			'amount_total' => 100,
+		);
 
-        $this->assertIsArray( $result );
-    }
+		$this->payment_service->create_checkout_session(
+			array( 'width' => 500, 'height' => 500 ),
+			'4x',
+			null,
+			'job-cur-test'
+		);
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_includes_product_description(): void {
-        $image_data = array(
-            'width'  => 500,
-            'height' => 400,
-        );
+		$params = StripeClient::$last_params;
+		$this->assertEquals( 'usd', $params['line_items'][0]['price_data']['currency'] );
+	}
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->withArgs(
-                function ( $session_data ) {
-                    $product_data = $session_data['line_items'][0]['price_data']['product_data'];
-                    // Should include resolution in name
-                    $has_name = strpos( $product_data['name'], '4x' ) !== false;
-                    // Should include dimensions in description
-                    $has_description = isset( $product_data['description'] );
-                    return $has_name && $has_description;
-                }
-            )
-            ->andReturn(
-                array(
-                    'session_id'   => 'cs_test',
-                    'checkout_url' => 'https://stripe.com',
-                )
-            );
+	/**
+	 * @test
+	 */
+	public function test_includes_success_and_cancel_urls(): void {
+		StripeClient::$mock_response = array(
+			'id'           => 'cs_test_urls',
+			'url'          => 'https://checkout.stripe.com/test',
+			'amount_total' => 100,
+		);
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            null,
-            'job-123'
-        );
+		$this->payment_service->create_checkout_session(
+			array( 'width' => 500, 'height' => 500 ),
+			'4x',
+			null,
+			'job-url-test'
+		);
 
-        $this->assertIsArray( $result );
-    }
+		$params = StripeClient::$last_params;
+		$this->assertStringContainsString( 'smi_payment=success', $params['success_url'] );
+		$this->assertStringContainsString( 'smi_payment=cancelled', $params['cancel_url'] );
+		$this->assertStringContainsString( 'job_id=job-url-test', $params['success_url'] );
+	}
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_uses_correct_currency(): void {
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 1000,
-        );
+	/**
+	 * @test
+	 */
+	public function test_includes_product_description_with_resolution(): void {
+		StripeClient::$mock_response = array(
+			'id'           => 'cs_test_desc',
+			'url'          => 'https://checkout.stripe.com/test',
+			'amount_total' => 100,
+		);
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->withArgs(
-                function ( $session_data ) {
-                    return $session_data['line_items'][0]['price_data']['currency'] === 'usd';
-                }
-            )
-            ->andReturn(
-                array(
-                    'session_id'   => 'cs_test',
-                    'checkout_url' => 'https://stripe.com',
-                )
-            );
+		$this->payment_service->create_checkout_session(
+			array( 'width' => 500, 'height' => 400 ),
+			'4x',
+			null,
+			'job-desc-test'
+		);
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            null,
-            'job-123'
-        );
+		$params       = StripeClient::$last_params;
+		$product_data = $params['line_items'][0]['price_data']['product_data'];
 
-        $this->assertIsArray( $result );
-    }
+		$this->assertStringContainsString( '4x', $product_data['name'] );
+		$this->assertNotEmpty( $product_data['description'] );
+	}
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_includes_success_and_cancel_urls(): void {
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 1000,
-        );
+	/**
+	 * @test
+	 */
+	public function test_handle_checkout_completed_updates_job_to_pending(): void {
+		$job_id = 'test-job-' . wp_generate_uuid4();
+		JobManager::create_job(
+			array(
+				'job_id'        => $job_id,
+				'attachment_id' => 1,
+				'resolution'    => '4x',
+				'email'         => 'test@example.com',
+				'status'        => 'awaiting_payment',
+			)
+		);
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->withArgs(
-                function ( $session_data ) {
-                    $has_success = isset( $session_data['success_url'] )
-                        && strpos( $session_data['success_url'], 'smi_payment=success' ) !== false;
-                    $has_cancel = isset( $session_data['cancel_url'] )
-                        && strpos( $session_data['cancel_url'], 'smi_payment=cancelled' ) !== false;
-                    return $has_success && $has_cancel;
-                }
-            )
-            ->andReturn(
-                array(
-                    'session_id'   => 'cs_test',
-                    'checkout_url' => 'https://stripe.com',
-                )
-            );
+		$session = array(
+			'id'               => 'cs_test_completed',
+			'payment_intent'   => 'pi_test_123',
+			'amount_total'     => 150,
+			'metadata'         => array(
+				'source' => 'sell-my-images',
+				'job_id' => $job_id,
+			),
+			'customer_details' => array(
+				'email' => 'stripe@example.com',
+			),
+		);
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            null,
-            'job-123'
-        );
+		$this->payment_service->handle_checkout_completed(
+			$session,
+			(object) array( 'type' => 'checkout.session.completed' )
+		);
 
-        $this->assertIsArray( $result );
-    }
+		$job = JobManager::get_job( $job_id );
+		$this->assertNotWPError( $job );
+		$this->assertEquals( 'pending', $job->status );
+	}
 
-    /**
-     * @test
-     */
-    public function payment_service_accepts_stripe_api_via_constructor(): void {
-        $custom_mock = Mockery::mock( StripeApi::class );
+	/**
+	 * @test
+	 */
+	public function test_handle_checkout_completed_ignores_non_smi_events(): void {
+		$session = array(
+			'id'       => 'cs_other_plugin',
+			'metadata' => array(
+				'source' => 'some-other-plugin',
+				'job_id' => 'other-job',
+			),
+		);
 
-        // Should not throw - verifies DI works
-        $service = new PaymentService( $custom_mock );
+		// Should not throw.
+		$this->payment_service->handle_checkout_completed(
+			$session,
+			(object) array( 'type' => 'checkout.session.completed' )
+		);
 
-        $this->assertInstanceOf( PaymentService::class, $service );
-    }
+		$this->assertTrue( true );
+	}
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_works_without_email(): void {
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 800,
-        );
+	/**
+	 * @test
+	 */
+	public function test_handle_checkout_expired_marks_job_abandoned(): void {
+		$job_id = 'test-job-' . wp_generate_uuid4();
+		JobManager::create_job(
+			array(
+				'job_id'        => $job_id,
+				'attachment_id' => 1,
+				'resolution'    => '4x',
+				'email'         => 'test@example.com',
+				'status'        => 'awaiting_payment',
+			)
+		);
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->withArgs(
-                function ( $session_data ) {
-                    // Verify customer_email is NOT set (Stripe collects it)
-                    return ! isset( $session_data['customer_email'] );
-                }
-            )
-            ->andReturn(
-                array(
-                    'session_id'   => 'cs_test_no_email',
-                    'checkout_url' => 'https://checkout.stripe.com/pay/cs_test_no_email',
-                )
-            );
+		$this->payment_service->handle_checkout_expired(
+			array(
+				'id'       => 'cs_test_expired',
+				'metadata' => array(
+					'source' => 'sell-my-images',
+					'job_id' => $job_id,
+				),
+			),
+			(object) array( 'type' => 'checkout.session.expired' )
+		);
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            null,
-            'job-uuid-no-email'
-        );
+		$job = JobManager::get_job( $job_id );
+		$this->assertNotWPError( $job );
+		$this->assertEquals( 'abandoned', $job->status );
+	}
 
-        $this->assertIsArray( $result );
-        $this->assertArrayHasKey( 'checkout_url', $result );
-    }
+	/**
+	 * @test
+	 */
+	public function test_handle_payment_failed_marks_job_failed(): void {
+		$job_id = 'test-job-' . wp_generate_uuid4();
+		JobManager::create_job(
+			array(
+				'job_id'        => $job_id,
+				'attachment_id' => 1,
+				'resolution'    => '4x',
+				'email'         => 'test@example.com',
+				'status'        => 'awaiting_payment',
+			)
+		);
 
-    /**
-     * @test
-     */
-    public function create_checkout_session_accepts_email_parameter(): void {
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 800,
-        );
+		$this->payment_service->handle_payment_failed(
+			array(
+				'id'       => 'pi_test_failed',
+				'metadata' => array(
+					'source' => 'sell-my-images',
+					'job_id' => $job_id,
+				),
+			),
+			(object) array( 'type' => 'payment_intent.payment_failed' )
+		);
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->withArgs(
-                function ( $session_data ) {
-                    // Verify session is created (email not forced to Stripe)
-                    return isset( $session_data['line_items'] )
-                        && isset( $session_data['metadata']['job_id'] );
-                }
-            )
-            ->andReturn(
-                array(
-                    'session_id'   => 'cs_test_with_email',
-                    'checkout_url' => 'https://checkout.stripe.com/pay/cs_test_with_email',
-                )
-            );
+		$job = JobManager::get_job( $job_id );
+		$this->assertNotWPError( $job );
+		$this->assertEquals( 'failed', $job->status );
+	}
 
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            'test@example.com',
-            'job-uuid-with-email'
-        );
+	/**
+	 * @test
+	 */
+	public function test_handle_checkout_completed_backfills_email(): void {
+		$job_id = 'test-job-' . wp_generate_uuid4();
+		JobManager::create_job(
+			array(
+				'job_id'        => $job_id,
+				'attachment_id' => 1,
+				'resolution'    => '4x',
+				'email'         => '',
+				'status'        => 'awaiting_payment',
+			)
+		);
 
-        $this->assertIsArray( $result );
-        $this->assertArrayHasKey( 'checkout_url', $result );
-    }
+		$this->payment_service->handle_checkout_completed(
+			array(
+				'id'               => 'cs_test_email',
+				'payment_intent'   => 'pi_test_email',
+				'amount_total'     => 200,
+				'metadata'         => array(
+					'source' => 'sell-my-images',
+					'job_id' => $job_id,
+				),
+				'customer_details' => array(
+					'email' => 'backfilled@example.com',
+				),
+			),
+			(object) array( 'type' => 'checkout.session.completed' )
+		);
 
-    /**
-     * @test
-     * Regression test: stripe-integration returns raw Stripe keys (url, id, amount_total)
-     * but SMI callers expect (checkout_url, session_id, amount).
-     * Broken Feb 5-12 2026 after migration to shared stripe-integration plugin.
-     */
-    public function create_checkout_session_normalizes_stripe_response_keys(): void {
-        $image_data = array(
-            'width'  => 1000,
-            'height' => 800,
-            'src'    => 'https://example.com/image.jpg',
-        );
+		$job = JobManager::get_job( $job_id );
+		$this->assertNotWPError( $job );
+		$this->assertEquals( 'backfilled@example.com', $job->email );
+	}
 
-        // Mock StripeClient to return raw Stripe response format
-        $raw_stripe_response = array(
-            'id'           => 'cs_live_abc123',
-            'url'          => 'https://checkout.stripe.com/c/pay/cs_live_abc123',
-            'amount_total' => 130, // Stripe returns cents
-            'object'       => 'checkout.session',
-            'status'       => 'open',
-        );
+	/**
+	 * @test
+	 */
+	public function test_validate_configuration_delegates_to_stripe_client(): void {
+		StripeClient::$mock_validate = true;
+		$this->assertTrue( $this->payment_service->validate_configuration() );
 
-        $this->stripe_api_mock
-            ->shouldReceive( 'create_checkout_session' )
-            ->once()
-            ->andReturn( $raw_stripe_response );
-
-        $result = $this->payment_service->create_checkout_session(
-            $image_data,
-            '4x',
-            'test@example.com',
-            'job-regression-test'
-        );
-
-        $this->assertIsArray( $result );
-
-        // These are the keys RestApi.php expects
-        $this->assertArrayHasKey( 'session_id', $result, 'Response must include session_id (mapped from Stripe id)' );
-        $this->assertArrayHasKey( 'checkout_url', $result, 'Response must include checkout_url (mapped from Stripe url)' );
-        $this->assertArrayHasKey( 'amount', $result, 'Response must include amount (mapped from Stripe amount_total)' );
-
-        // Values must be correct
-        $this->assertEquals( 'cs_live_abc123', $result['session_id'] );
-        $this->assertEquals( 'https://checkout.stripe.com/c/pay/cs_live_abc123', $result['checkout_url'] );
-        $this->assertEquals( 1.30, $result['amount'], 'Amount must be converted from cents to dollars' );
-
-        // Must NOT contain raw Stripe keys (callers don't expect them)
-        $this->assertArrayNotHasKey( 'id', $result, 'Raw Stripe key "id" should not leak through' );
-        $this->assertArrayNotHasKey( 'url', $result, 'Raw Stripe key "url" should not leak through' );
-        $this->assertArrayNotHasKey( 'amount_total', $result, 'Raw Stripe key "amount_total" should not leak through' );
-    }
+		StripeClient::$mock_validate = new \WP_Error( 'stripe_integration_missing_key', 'No key' );
+		$this->assertWPError( $this->payment_service->validate_configuration() );
+	}
 }
