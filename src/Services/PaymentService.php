@@ -102,7 +102,18 @@ class PaymentService {
 		);
 
 		// Create session using shared StripeClient.
-		return StripeClient::create_checkout_session( $session_data );
+		$result = StripeClient::create_checkout_session( $session_data );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		// Normalize Stripe response keys to SMI's expected format.
+		return array(
+			'session_id'   => $result['id'] ?? null,
+			'checkout_url' => $result['url'] ?? null,
+			'amount'       => ( $result['amount_total'] ?? 0 ) / 100,
+		);
 	}
 
 	/**
