@@ -386,4 +386,56 @@ class PaymentServiceTest extends \SMI_TestCase {
         $this->assertIsArray( $result );
         $this->assertArrayHasKey( 'checkout_url', $result );
     }
+
+    /**
+     * @test
+     * Regression test: stripe-integration returns raw Stripe keys (url, id, amount_total)
+     * but SMI callers expect (checkout_url, session_id, amount).
+     * Broken Feb 5-12 2026 after migration to shared stripe-integration plugin.
+     */
+    public function create_checkout_session_normalizes_stripe_response_keys(): void {
+        $image_data = array(
+            'width'  => 1000,
+            'height' => 800,
+            'src'    => 'https://example.com/image.jpg',
+        );
+
+        // Mock StripeClient to return raw Stripe response format
+        $raw_stripe_response = array(
+            'id'           => 'cs_live_abc123',
+            'url'          => 'https://checkout.stripe.com/c/pay/cs_live_abc123',
+            'amount_total' => 130, // Stripe returns cents
+            'object'       => 'checkout.session',
+            'status'       => 'open',
+        );
+
+        $this->stripe_api_mock
+            ->shouldReceive( 'create_checkout_session' )
+            ->once()
+            ->andReturn( $raw_stripe_response );
+
+        $result = $this->payment_service->create_checkout_session(
+            $image_data,
+            '4x',
+            'test@example.com',
+            'job-regression-test'
+        );
+
+        $this->assertIsArray( $result );
+
+        // These are the keys RestApi.php expects
+        $this->assertArrayHasKey( 'session_id', $result, 'Response must include session_id (mapped from Stripe id)' );
+        $this->assertArrayHasKey( 'checkout_url', $result, 'Response must include checkout_url (mapped from Stripe url)' );
+        $this->assertArrayHasKey( 'amount', $result, 'Response must include amount (mapped from Stripe amount_total)' );
+
+        // Values must be correct
+        $this->assertEquals( 'cs_live_abc123', $result['session_id'] );
+        $this->assertEquals( 'https://checkout.stripe.com/c/pay/cs_live_abc123', $result['checkout_url'] );
+        $this->assertEquals( 1.30, $result['amount'], 'Amount must be converted from cents to dollars' );
+
+        // Must NOT contain raw Stripe keys (callers don't expect them)
+        $this->assertArrayNotHasKey( 'id', $result, 'Raw Stripe key "id" should not leak through' );
+        $this->assertArrayNotHasKey( 'url', $result, 'Raw Stripe key "url" should not leak through' );
+        $this->assertArrayNotHasKey( 'amount_total', $result, 'Raw Stripe key "amount_total" should not leak through' );
+    }
 }
