@@ -61,10 +61,10 @@ export default function Edit( { attributes, setAttributes }: BlockEditProps< Com
                     <RangeControl
                         label={ __( 'Initial Position', 'sell-my-images' ) }
                         value={ initialPosition }
-                        onChange={ ( value ) => setAttributes( { initialPosition: value ?? 50 } ) }
+                        onChange={ ( value ) => setAttributes( { initialPosition: value ?? 0 } ) }
                         min={ 0 }
                         max={ 100 }
-                        help={ __( 'Where the slider starts (0=all enhanced, 100=all original)', 'sell-my-images' ) }
+                        help={ __( 'Where the slider starts (0=only original, 100=fully enhanced)', 'sell-my-images' ) }
                     />
                 </PanelBody>
             </InspectorControls>

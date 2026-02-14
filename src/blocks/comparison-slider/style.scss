@@ -26,74 +26,36 @@
         -webkit-user-select: none;
     }
 
-    // After wrapper - full size underneath, sharp
-    .smi-comparison-after-wrap {
+    .smi-comparison-before,
+    .smi-comparison-after {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 1;
-
-        img,
-        picture {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
 
         img {
-            object-fit: cover;
-        }
-
-        picture img {
+            display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
     }
 
-    // Before wrapper - left side, blurry
-    .smi-comparison-before-wrap {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 50%;
-        height: 100%;
-        overflow: hidden;
+    .smi-comparison-before {
+        z-index: 1;
+    }
+
+    .smi-comparison-after {
         z-index: 2;
-
-        img,
-        picture {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 200%;
-            height: 100%;
-        }
-
-        img {
-            object-fit: cover;
-            // Blur is applied via inline style from render.php
-        }
-
-        picture {
-            display: block;
-        }
-
-        picture img {
-            position: static;
-            width: 200%;
-            height: 100%;
-            object-fit: cover;
-        }
+        // clip-path set via inline style and JS
     }
 
     .smi-comparison-handle {
         position: absolute;
         top: 0;
         bottom: 0;
-        left: 50%;
+        left: 0%;
         width: 4px;
         background: white;
         z-index: 3;

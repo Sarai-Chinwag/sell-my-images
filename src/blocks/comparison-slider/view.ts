@@ -8,10 +8,10 @@
         const sliders = document.querySelectorAll< HTMLElement >( '.smi-comparison-slider' );
 
         sliders.forEach( ( slider: HTMLElement ): void => {
-            const beforeWrap = slider.querySelector< HTMLElement >( '.smi-comparison-before-wrap' );
+            const afterWrap = slider.querySelector< HTMLElement >( '.smi-comparison-after' );
             const handle = slider.querySelector< HTMLElement >( '.smi-comparison-handle' );
 
-            if ( ! beforeWrap || ! handle ) {
+            if ( ! afterWrap || ! handle ) {
                 return;
             }
 
@@ -19,52 +19,52 @@
 
             function updatePosition( x: number ): void {
                 const rect = slider.getBoundingClientRect();
-                let percentage = ( ( x - rect.left ) / rect.width ) * 100;
-                percentage = Math.max( 0, Math.min( 100, percentage ) );
+                let pct = ( ( x - rect.left ) / rect.width ) * 100;
+                pct = Math.max( 0, Math.min( 100, pct ) );
 
-                beforeWrap!.style.width = percentage + '%';
-                handle!.style.left = percentage + '%';
-            }
-
-            function onStart( e: MouseEvent | TouchEvent ): void {
-                isDragging = true;
-                slider.style.cursor = 'grabbing';
-                e.preventDefault();
-            }
-
-            function onMove( e: MouseEvent | TouchEvent ): void {
-                if ( ! isDragging ) {
-                    return;
-                }
-
-                const x = e.type.includes( 'touch' )
-                    ? ( e as TouchEvent ).touches[ 0 ].clientX
-                    : ( e as MouseEvent ).clientX;
-
-                updatePosition( x );
-            }
-
-            function onEnd(): void {
-                isDragging = false;
-                slider.style.cursor = 'ew-resize';
+                afterWrap!.style.clipPath = `inset(0 ${ 100 - pct }% 0 0)`;
+                handle!.style.left = pct + '%';
             }
 
             // Mouse events
-            slider.addEventListener( 'mousedown', onStart );
-            document.addEventListener( 'mousemove', onMove );
-            document.addEventListener( 'mouseup', onEnd );
-
-            // Touch events
-            slider.addEventListener( 'touchstart', onStart, { passive: false } );
-            document.addEventListener( 'touchmove', onMove, { passive: true } );
-            document.addEventListener( 'touchend', onEnd );
-
-            // Click to jump
-            slider.addEventListener( 'click', ( e: MouseEvent ): void => {
-                if ( ! isDragging ) {
+            slider.addEventListener( 'mousedown', ( e: MouseEvent ): void => {
+                isDragging = true;
+                e.preventDefault();
+            } );
+            document.addEventListener( 'mousemove', ( e: MouseEvent ): void => {
+                if ( isDragging ) {
                     updatePosition( e.clientX );
                 }
             } );
+            document.addEventListener( 'mouseup', (): void => {
+                isDragging = false;
+            } );
+
+            // Touch events
+            slider.addEventListener( 'touchstart', ( e: TouchEvent ): void => {
+                isDragging = true;
+                e.preventDefault();
+            }, { passive: false } );
+            document.addEventListener( 'touchmove', ( e: TouchEvent ): void => {
+                if ( isDragging ) {
+                    updatePosition( e.touches[ 0 ].clientX );
+                }
+            }, { passive: true } );
+            document.addEventListener( 'touchend', (): void => {
+                isDragging = false;
+            } );
+
+            // Click to jump
+            slider.addEventListener( 'click', ( e: MouseEvent ): void => {
+                updatePosition( e.clientX );
+            } );
+
+            // Set initial position from data attribute
+            const initPos = parseFloat( slider.dataset.position || '0' );
+            if ( initPos > 0 ) {
+                afterWrap.style.clipPath = `inset(0 ${ 100 - initPos }% 0 0)`;
+                handle.style.left = initPos + '%';
+            }
         } );
     }
 
