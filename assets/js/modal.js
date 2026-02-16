@@ -103,7 +103,6 @@
             var attachmentId = $button.data('attachment-id');
             var postId = $button.data('post-id');
             
-            console.log('SMI: Tracking button click - Attachment ID:', attachmentId, 'Post ID:', postId);
             
             // Validate required data
             if (!attachmentId || !postId) {
@@ -123,7 +122,6 @@
                     post_id: postId
                 },
                 success: function(response) {
-                    console.log('SMI: Click tracked successfully for Attachment ID:', attachmentId, response);
                 },
                 error: function(xhr, status, error) {
                     // Log but don't interrupt user experience
@@ -650,7 +648,6 @@
         // Optional root can be provided (selector/Element/jQuery) to limit scope
         injectButtons: function(root) {
             var self = this;
-            console.log('SMI: Injecting buttons into image blocks');
             
             var $figures;
             if (root) {
@@ -707,17 +704,13 @@
                 
                 if (!attachmentId) {
                     console.warn('SMI: No attachment ID found for image block');
-                    console.log('SMI Debug - Figure classes:', $figure.attr('class'));
-                    console.log('SMI Debug - Img classes:', imgClasses);
                     var $picture = $figure.find('picture');
                     if ($picture.length) {
-                        console.log('SMI Debug - Picture classes:', $picture.attr('class'));
                     }
                     return;
                 }
                 
                 // Log successful detection
-                console.log('SMI: Found attachment ID', attachmentId, 'via', detectionSource);
                 var postId = self.getPostId();
                 // Check for lazy loading attributes first (where the real URL is stored)
                 var imgSrc = $img.attr('data-breeze') ||
@@ -729,7 +722,6 @@
                 
                 // Skip very small images (likely icons)
                 if (imgWidth < 100 || imgHeight < 100) {
-                    console.log('SMI: Skipping small image:', imgWidth + 'x' + imgHeight);
                     return;
                 }
                 
@@ -744,7 +736,6 @@
                     var buttonPostId = $createdButton.data('post-id');
                     
                     if (buttonAttachmentId && buttonPostId) {
-                        console.log('SMI: Button successfully injected - Attachment ID:', buttonAttachmentId, 'Post ID:', buttonPostId);
                     } else {
                         console.error('SMI: Button created but missing data attributes - Attachment ID:', buttonAttachmentId, 'Post ID:', buttonPostId);
                     }

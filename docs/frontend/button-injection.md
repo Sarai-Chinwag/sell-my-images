@@ -53,7 +53,6 @@ Prevents unnecessary button injection:
 ```javascript
 // Skip very small images (likely icons)
 if (imgWidth < 100 || imgHeight < 100) {
-    console.log('SMI: Skipping small image:', imgWidth + 'x' + imgHeight);
     return;
 }
 
@@ -128,12 +127,7 @@ commonSelectors.forEach(selector => {
 - Fallback to manual triggers
 
 **Debug Information**
-Comprehensive logging for troubleshooting:
-```javascript
-console.log('SMI: Found attachment ID', attachmentId, 'via', detectionSource);
-console.log('SMI Debug - Figure classes:', $figure.attr('class'));
-console.log('SMI Debug - Img classes:', imgClasses);
-```
+Inspect the rendered DOM in the browser when troubleshooting detection and button injection issues.
 
 ## External Integration
 
