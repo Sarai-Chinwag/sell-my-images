@@ -82,7 +82,6 @@
         setupModal: function() {
             // Ensure modal exists
             if (this.modal.length === 0) {
-                console.warn('SMI: Modal element not found');
                 return;
             }
             
@@ -103,11 +102,9 @@
             var attachmentId = $button.data('attachment-id');
             var postId = $button.data('post-id');
             
-            console.log('SMI: Tracking button click - Attachment ID:', attachmentId, 'Post ID:', postId);
             
             // Validate required data
             if (!attachmentId || !postId) {
-                console.warn('SMI: Missing attachment-id or post-id for click tracking - Button data:', $button.data());
                 return;
             }
             
@@ -121,16 +118,6 @@
                 data: {
                     attachment_id: attachmentId,
                     post_id: postId
-                },
-                success: function(response) {
-                    console.log('SMI: Click tracked successfully for Attachment ID:', attachmentId, response);
-                },
-                error: function(xhr, status, error) {
-                    // Log but don't interrupt user experience
-                    console.warn('SMI: Click tracking failed for Attachment ID:', attachmentId, 'Error:', error);
-                    if (xhr.responseJSON) {
-                        console.warn('SMI: Server response:', xhr.responseJSON);
-                    }
                 }
             });
         },
@@ -371,7 +358,6 @@
             
             // Check if elements exist
             if ($option.length === 0 || $label.length === 0) {
-                console.warn('SMI: Resolution option elements not found for ' + resolution);
                 return;
             }
             
@@ -412,7 +398,6 @@
             
             // Check if elements exist
             if ($option.length === 0 || $label.length === 0) {
-                console.warn('SMI: Resolution option elements not found for error display: ' + resolution);
                 return;
             }
             
@@ -650,7 +635,6 @@
         // Optional root can be provided (selector/Element/jQuery) to limit scope
         injectButtons: function(root) {
             var self = this;
-            console.log('SMI: Injecting buttons into image blocks');
             
             var $figures;
             if (root) {
@@ -706,18 +690,13 @@
                 }
                 
                 if (!attachmentId) {
-                    console.warn('SMI: No attachment ID found for image block');
-                    console.log('SMI Debug - Figure classes:', $figure.attr('class'));
-                    console.log('SMI Debug - Img classes:', imgClasses);
                     var $picture = $figure.find('picture');
                     if ($picture.length) {
-                        console.log('SMI Debug - Picture classes:', $picture.attr('class'));
                     }
                     return;
                 }
                 
                 // Log successful detection
-                console.log('SMI: Found attachment ID', attachmentId, 'via', detectionSource);
                 var postId = self.getPostId();
                 // Check for lazy loading attributes first (where the real URL is stored)
                 var imgSrc = $img.attr('data-breeze') ||
@@ -729,7 +708,6 @@
                 
                 // Skip very small images (likely icons)
                 if (imgWidth < 100 || imgHeight < 100) {
-                    console.log('SMI: Skipping small image:', imgWidth + 'x' + imgHeight);
                     return;
                 }
                 
@@ -744,12 +722,9 @@
                     var buttonPostId = $createdButton.data('post-id');
                     
                     if (buttonAttachmentId && buttonPostId) {
-                        console.log('SMI: Button successfully injected - Attachment ID:', buttonAttachmentId, 'Post ID:', buttonPostId);
                     } else {
-                        console.error('SMI: Button created but missing data attributes - Attachment ID:', buttonAttachmentId, 'Post ID:', buttonPostId);
                     }
                 } else {
-                    console.error('SMI: Button HTML created but not found in DOM');
                 }
             });
         },
@@ -764,7 +739,6 @@
                     var root = data && data.root ? data.root : null;
                     self.injectButtons(root);
                 } catch (err) {
-                    console.warn('SMI: refreshButtons handler error', err);
                 }
             });
 
@@ -774,7 +748,6 @@
                     var detail = e && e.detail ? e.detail : {};
                     self.injectButtons(detail.root || null);
                 } catch (err) {
-                    console.warn('SMI: native refreshButtons handler error', err);
                 }
             });
 
@@ -1064,7 +1037,6 @@
                 return smi_ajax.post_id;
             }
             
-            console.warn('SMI: Could not determine post ID');
             return 0;
         }
     };
