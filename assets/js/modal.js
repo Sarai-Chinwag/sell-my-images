@@ -82,7 +82,6 @@
         setupModal: function() {
             // Ensure modal exists
             if (this.modal.length === 0) {
-                console.warn('SMI: Modal element not found');
                 return;
             }
             
@@ -106,7 +105,6 @@
             
             // Validate required data
             if (!attachmentId || !postId) {
-                console.warn('SMI: Missing attachment-id or post-id for click tracking - Button data:', $button.data());
                 return;
             }
             
@@ -120,15 +118,6 @@
                 data: {
                     attachment_id: attachmentId,
                     post_id: postId
-                },
-                success: function(response) {
-                },
-                error: function(xhr, status, error) {
-                    // Log but don't interrupt user experience
-                    console.warn('SMI: Click tracking failed for Attachment ID:', attachmentId, 'Error:', error);
-                    if (xhr.responseJSON) {
-                        console.warn('SMI: Server response:', xhr.responseJSON);
-                    }
                 }
             });
         },
@@ -369,7 +358,6 @@
             
             // Check if elements exist
             if ($option.length === 0 || $label.length === 0) {
-                console.warn('SMI: Resolution option elements not found for ' + resolution);
                 return;
             }
             
@@ -410,7 +398,6 @@
             
             // Check if elements exist
             if ($option.length === 0 || $label.length === 0) {
-                console.warn('SMI: Resolution option elements not found for error display: ' + resolution);
                 return;
             }
             
@@ -703,7 +690,6 @@
                 }
                 
                 if (!attachmentId) {
-                    console.warn('SMI: No attachment ID found for image block');
                     var $picture = $figure.find('picture');
                     if ($picture.length) {
                     }
@@ -737,10 +723,8 @@
                     
                     if (buttonAttachmentId && buttonPostId) {
                     } else {
-                        console.error('SMI: Button created but missing data attributes - Attachment ID:', buttonAttachmentId, 'Post ID:', buttonPostId);
                     }
                 } else {
-                    console.error('SMI: Button HTML created but not found in DOM');
                 }
             });
         },
@@ -755,7 +739,6 @@
                     var root = data && data.root ? data.root : null;
                     self.injectButtons(root);
                 } catch (err) {
-                    console.warn('SMI: refreshButtons handler error', err);
                 }
             });
 
@@ -765,7 +748,6 @@
                     var detail = e && e.detail ? e.detail : {};
                     self.injectButtons(detail.root || null);
                 } catch (err) {
-                    console.warn('SMI: native refreshButtons handler error', err);
                 }
             });
 
@@ -1055,7 +1037,6 @@
                 return smi_ajax.post_id;
             }
             
-            console.warn('SMI: Could not determine post ID');
             return 0;
         }
     };
