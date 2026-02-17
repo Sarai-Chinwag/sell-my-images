@@ -72,8 +72,8 @@ $clip_right = 100 - (int) $initial_position;
             </div>
         </div>
         <div class="smi-comparison-labels">
-            <span><?php esc_html_e( 'Original', 'sell-my-images' ); ?></span>
             <span><?php esc_html_e( '8x Enhanced', 'sell-my-images' ); ?> ✨</span>
+            <span><?php esc_html_e( 'Original', 'sell-my-images' ); ?></span>
         </div>
     </div>
 </div>
