@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.4] - 2026-02-17
+
+### Added
+- proper footer nav in checkout modal with Terms, Learn More, Upscale links
+
+### Fixed
+- never delete abandoned job records (keep for analytics)
+- swap comparison slider labels (Enhanced left, Original right)
+- remove all forced uppercase text-transform from uploader block
+- rebuild comparison slider (clip-path), default position to 50%
+- move Terms link below checkout button, make it subtle
+
 ## [1.3.3] - 2026-02-17
 
 ### Changed
