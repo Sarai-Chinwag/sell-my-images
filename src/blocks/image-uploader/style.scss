@@ -24,7 +24,6 @@
         margin: 0 0 0.5rem;
         font-size: calc(var(--font-size-h2, 1.38em) * var(--font-heading-scale, 1));
         color: var(--color-text, #000);
-        text-transform: uppercase;
     }
 
     .smi-uploader-description {
@@ -67,7 +66,6 @@
     font-size: calc(var(--font-size-h3, 1.2em) * var(--font-heading-scale, 1));
     color: var(--color-text, #000);
     margin: 0 0 0.5rem;
-    text-transform: uppercase;
 }
 
 .smi-dropzone-or {
@@ -85,7 +83,6 @@
     font-size: inherit;
     cursor: pointer;
     transition: all 0.2s ease;
-    text-transform: uppercase;
 
     &:hover {
         background-color: #17a8c4;
@@ -159,7 +156,6 @@
         font-size: calc(var(--font-size-h3, 1.2em) * var(--font-heading-scale, 1));
         color: var(--color-text, #000);
         text-align: center;
-        text-transform: uppercase;
     }
 }
 
@@ -205,7 +201,6 @@
     font-weight: 600;
     color: var(--color-text, #000);
     margin-bottom: 0.25rem;
-    text-transform: uppercase;
 }
 
 .smi-resolution-output {
@@ -233,7 +228,6 @@
         font-size: var(--font-size-small, 0.9rem);
         color: var(--color-text, #000);
         margin-bottom: 0.5rem;
-        text-transform: uppercase;
     }
 
     input {
@@ -271,7 +265,6 @@
     transition: all 0.2s ease;
     width: 100%;
     max-width: 300px;
-    text-transform: uppercase;
 
     &:hover {
         background-color: #17a8c4;
