@@ -78,9 +78,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             
             <div class="smi-modal-footer">
                 <button type="button" class="smi-btn smi-btn-primary smi-process-btn" disabled>Checkout with Stripe</button>
-                <div class="smi-footer-links">
-                    <div class="smi-terms-link smi-hidden">
-                        <a href="" target="_blank" rel="noopener noreferrer">Terms & Conditions</a>
+                <div class="smi-footer-bottom">
+                    <div class="smi-footer-nav">
+                        <a href="<?php echo esc_url( get_option( 'smi_terms_conditions_url', '' ) ); ?>" target="_blank" rel="noopener noreferrer" class="smi-footer-nav-link smi-terms-footer-link"><?php esc_html_e( 'Terms & Conditions', 'sell-my-images' ); ?></a>
+                        <span class="smi-footer-sep">·</span>
+                        <a href="/hi-res-images/" class="smi-footer-nav-link"><?php esc_html_e( 'Learn More', 'sell-my-images' ); ?></a>
+                        <span class="smi-footer-sep">·</span>
+                        <a href="/upscale/" class="smi-footer-nav-link"><?php esc_html_e( 'Upscale Your Own', 'sell-my-images' ); ?></a>
                     </div>
                 </div>
             </div>

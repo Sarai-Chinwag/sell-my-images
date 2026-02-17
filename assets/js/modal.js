@@ -85,13 +85,9 @@
                 return;
             }
             
-            // Setup Terms & Conditions link if URL is provided
-            if (smi_ajax.terms_conditions_url && smi_ajax.terms_conditions_url.trim() !== '') {
-                var $termsLink = this.modal.find('.smi-terms-link');
-                var $termsAnchor = $termsLink.find('a');
-                
-                $termsAnchor.attr('href', smi_ajax.terms_conditions_url);
-                $termsLink.removeClass('smi-hidden');
+            // Hide terms link if no URL is configured
+            if (!smi_ajax.terms_conditions_url || smi_ajax.terms_conditions_url.trim() === '') {
+                this.modal.find('.smi-terms-footer-link, .smi-terms-footer-link + .smi-footer-sep').hide();
             }
         },
         
