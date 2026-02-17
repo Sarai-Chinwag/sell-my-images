@@ -190,6 +190,7 @@
             this.showError(false);
             this.toggleProcessButton(false);
             $('input[name="resolution"]').prop('checked', false);
+            $('input[name="resolution"][value="4x"]').prop('checked', true);
             $('#smi-email').val('');
             
             // Remove any retry buttons
@@ -247,6 +248,9 @@
             // Show main content
             this.showLoading(false);
             this.showMainContent(true);
+            
+            // Enable process button since 4x is pre-selected
+            this.updateProcessButton();
         },
         
         /**

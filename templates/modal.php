@@ -47,7 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <div class="smi-resolution-options">
                             
                             <label class="smi-option" for="smi-resolution-4x">
-                                <input type="radio" id="smi-resolution-4x" name="resolution" value="4x" />
+                                <input type="radio" id="smi-resolution-4x" name="resolution" value="4x" checked />
                                 <div class="smi-option-label">
                                     <strong>Standard Quality (4x)</strong>
                                     <div class="smi-option-details">Perfect for prints and web</div>
