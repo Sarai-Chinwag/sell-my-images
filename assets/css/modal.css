@@ -470,9 +470,9 @@ figure.wp-block-image:hover .smi-get-button {
     border-top-color: rgba(0, 0, 0, 0.1);
     background: var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.03));
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .smi-btn {
@@ -770,18 +770,20 @@ body.smi-modal-open {
 .smi-footer-links {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 15px;
+    gap: 4px;
+    margin: 0;
     text-align: center;
 }
 
-.smi-upload-link a {
-    color: #666;
-    font-size: 0.9rem;
+.smi-terms-link a {
+    color: #999;
+    font-size: 0.75rem;
     text-decoration: none;
 }
 
-.smi-upload-link a:hover {
-    color: #0073aa;
+.smi-terms-link a:hover {
+    color: #666;
     text-decoration: underline;
 }
+
+/* upload-link removed */

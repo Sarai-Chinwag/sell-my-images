@@ -77,12 +77,12 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
             
             <div class="smi-modal-footer">
+                <button type="button" class="smi-btn smi-btn-primary smi-process-btn" disabled>Checkout with Stripe</button>
                 <div class="smi-footer-links">
                     <div class="smi-terms-link smi-hidden">
                         <a href="" target="_blank" rel="noopener noreferrer">Terms & Conditions</a>
                     </div>
                 </div>
-                <button type="button" class="smi-btn smi-btn-primary smi-process-btn" disabled>Checkout with Stripe</button>
             </div>
         </div>
     </div>
