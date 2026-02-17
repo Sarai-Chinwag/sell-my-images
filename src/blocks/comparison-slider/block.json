@@ -29,7 +29,7 @@
         },
         "initialPosition": {
             "type": "number",
-            "default": 0
+            "default": 50
         }
     },
     "textdomain": "sell-my-images",

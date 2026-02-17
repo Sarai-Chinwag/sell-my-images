@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $image_id         = $attributes['imageId'] ?? null;
 $image_url        = $attributes['imageUrl'] ?? '';
 $blur_amount      = $attributes['blurAmount'] ?? 2;
-$initial_position = $attributes['initialPosition'] ?? 0;
+$initial_position = $attributes['initialPosition'] ?? 50;
 
 // If no image, don't render anything.
 if ( empty( $image_url ) && empty( $image_id ) ) {
