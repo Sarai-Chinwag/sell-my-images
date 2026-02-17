@@ -96,6 +96,7 @@ class SellMyImages {
         \SellMyImages\Abilities\InventoryAbilities::init();
         \SellMyImages\Abilities\UploadAbilities::init();
         \SellMyImages\Abilities\AnalyticsAbilities::init();
+        \SellMyImages\Abilities\UpscaleAbilities::init();
         
         // Register blocks
         $this->register_blocks();
