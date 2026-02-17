@@ -390,7 +390,8 @@ class DatabaseManager {
             }
         }
 
-        // Get abandoned jobs older than cleanup threshold
+        // Abandoned jobs are kept permanently for analytics (abandoned cart tracking).
+        // Only clean up any associated files, never delete the records.
         $abandoned_jobs = $wpdb->get_results( $wpdb->prepare(
             "SELECT job_id, upscaled_file_path FROM $table
              WHERE status = %s
@@ -400,19 +401,9 @@ class DatabaseManager {
         ) );
 
         foreach ( $abandoned_jobs as $job ) {
-            // Delete physical file if it exists
+            // Delete physical file if it exists (free disk space)
             if ( ! empty( $job->upscaled_file_path ) && file_exists( $job->upscaled_file_path ) ) {
                 wp_delete_file( $job->upscaled_file_path );
-            }
-
-            // Delete entire job record
-            $deleted = $wpdb->delete(
-                $table,
-                array( 'job_id' => $job->job_id ),
-                array( '%s' )
-            );
-
-            if ( $deleted ) {
                 $cleaned_count++;
             }
         }
