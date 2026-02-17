@@ -28,3 +28,4 @@ error_log
 # Documentation sync
 /docs/.docs-sync.json
 node_modules/
+build/sell-my-images.zip
