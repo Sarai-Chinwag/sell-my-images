@@ -81,9 +81,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <div class="smi-terms-link smi-hidden">
                         <a href="" target="_blank" rel="noopener noreferrer">Terms & Conditions</a>
                     </div>
-                    <div class="smi-upload-link">
-                        <a href="/upscale/">Have your own image? Upload it →</a>
-                    </div>
                 </div>
                 <button type="button" class="smi-btn smi-btn-primary smi-process-btn" disabled>Checkout with Stripe</button>
             </div>

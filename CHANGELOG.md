@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Remove console statements from modal script
+- Rebuild comparison slider: clip-path reveal instead of width:200% hack
+
 ## [1.3.1] - 2026-02-12
 
 - fix: critical checkout bug - Stripe response key mismatch after stripe-integration migration (7 days broken)
