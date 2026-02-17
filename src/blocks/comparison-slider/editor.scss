@@ -3,20 +3,63 @@
  */
 
 .wp-block-smi-comparison-slider {
+    .smi-comparison-upload-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin: 16px 0;
+    }
+
+    .smi-comparison-upload-item {
+        text-align: center;
+        
+        h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        img {
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+    }
+
     .smi-comparison-editor-preview {
         border: 1px solid #ddd;
         border-radius: 8px;
         overflow: hidden;
     }
 
-    .smi-comparison-preview-image {
+    .smi-comparison-preview-container {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 200px;
+    }
+
+    .smi-comparison-preview-before,
+    .smi-comparison-preview-after {
         position: relative;
         
         img {
             display: block;
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: cover;
         }
+    }
+
+    .smi-comparison-preview-label {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
     }
 
     .smi-comparison-preview-overlay {
@@ -25,7 +68,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -35,6 +78,7 @@
             padding: 8px 16px;
             border-radius: 4px;
             font-weight: 500;
+            font-size: 14px;
         }
     }
 
@@ -44,5 +88,6 @@
         padding: 12px;
         background: #f5f5f5;
         justify-content: center;
+        flex-wrap: wrap;
     }
 }

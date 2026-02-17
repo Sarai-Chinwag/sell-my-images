@@ -17,19 +17,29 @@
         }
     },
     "attributes": {
-        "imageId": {
+        "beforeImageId": {
             "type": "number"
         },
-        "imageUrl": {
+        "beforeImageUrl": {
             "type": "string"
         },
-        "blurAmount": {
-            "type": "number",
-            "default": 2
+        "afterImageId": {
+            "type": "number"
+        },
+        "afterImageUrl": {
+            "type": "string"
         },
         "initialPosition": {
             "type": "number",
             "default": 50
+        },
+        "beforeLabel": {
+            "type": "string",
+            "default": "Original"
+        },
+        "afterLabel": {
+            "type": "string",
+            "default": "Enhanced"
         }
     },
     "textdomain": "sell-my-images",

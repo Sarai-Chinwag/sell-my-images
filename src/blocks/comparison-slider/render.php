@@ -10,22 +10,25 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$image_id         = $attributes['imageId'] ?? null;
-$image_url        = $attributes['imageUrl'] ?? '';
-$blur_amount      = $attributes['blurAmount'] ?? 2;
+$before_image_id  = $attributes['beforeImageId'] ?? null;
+$before_image_url = $attributes['beforeImageUrl'] ?? '';
+$after_image_id   = $attributes['afterImageId'] ?? null;
+$after_image_url  = $attributes['afterImageUrl'] ?? '';
 $initial_position = $attributes['initialPosition'] ?? 50;
+$before_label     = $attributes['beforeLabel'] ?? __( 'Original', 'sell-my-images' );
+$after_label      = $attributes['afterLabel'] ?? __( 'Enhanced', 'sell-my-images' );
 
-// If no image, don't render anything.
-if ( empty( $image_url ) && empty( $image_id ) ) {
-    return;
+// Get image URLs from IDs if not set.
+if ( empty( $before_image_url ) && ! empty( $before_image_id ) ) {
+    $before_image_url = wp_get_attachment_url( $before_image_id );
 }
 
-// Get image URL from ID if not set.
-if ( empty( $image_url ) && ! empty( $image_id ) ) {
-    $image_url = wp_get_attachment_url( $image_id );
+if ( empty( $after_image_url ) && ! empty( $after_image_id ) ) {
+    $after_image_url = wp_get_attachment_url( $after_image_id );
 }
 
-if ( empty( $image_url ) ) {
+// If either image is missing, don't render anything.
+if ( empty( $before_image_url ) || empty( $after_image_url ) ) {
     return;
 }
 
@@ -47,22 +50,20 @@ $clip_right = 100 - (int) $initial_position;
         <div
             id="<?php echo esc_attr( $unique_id ); ?>"
             class="smi-comparison-slider"
-            data-blur="<?php echo esc_attr( $blur_amount ); ?>"
             data-position="<?php echo esc_attr( $initial_position ); ?>"
         >
             <div class="smi-comparison-before">
                 <img
-                    src="<?php echo esc_url( $image_url ); ?>"
-                    alt="<?php esc_attr_e( 'Original image', 'sell-my-images' ); ?>"
+                    src="<?php echo esc_url( $before_image_url ); ?>"
+                    alt="<?php echo esc_attr( $before_label ); ?>"
                     class="no-lazyload"
                     data-no-lazy="1"
-                    style="filter: blur(<?php echo esc_attr( $blur_amount ); ?>px) saturate(0.85);"
                 >
             </div>
             <div class="smi-comparison-after" style="clip-path: inset(0 <?php echo esc_attr( $clip_right ); ?>% 0 0);">
                 <img
-                    src="<?php echo esc_url( $image_url ); ?>"
-                    alt="<?php esc_attr_e( 'Enhanced image', 'sell-my-images' ); ?>"
+                    src="<?php echo esc_url( $after_image_url ); ?>"
+                    alt="<?php echo esc_attr( $after_label ); ?>"
                     class="no-lazyload"
                     data-no-lazy="1"
                 >
@@ -72,8 +73,8 @@ $clip_right = 100 - (int) $initial_position;
             </div>
         </div>
         <div class="smi-comparison-labels">
-            <span><?php esc_html_e( '8x Enhanced', 'sell-my-images' ); ?> ✨</span>
-            <span><?php esc_html_e( 'Original', 'sell-my-images' ); ?></span>
+            <span><?php echo esc_html( $after_label ); ?> ✨</span>
+            <span><?php echo esc_html( $before_label ); ?></span>
         </div>
     </div>
 </div>
