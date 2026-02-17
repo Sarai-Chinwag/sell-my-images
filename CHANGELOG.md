@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.3.3] - 2026-02-17
 
 ### Changed
 - Remove console statements from modal script
