@@ -20,14 +20,39 @@
 	 * @param {Object} input  Input parameters.
 	 * @return {Promise<Object>} Ability output.
 	 */
-	async function runAbility( name, input ) {
-		const response = await fetch( API_BASE + name + '/run', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': NONCE,
-			},
-			body: JSON.stringify( { input: input } ),
+	/**
+	 * Call a WordPress ability via REST API.
+	 *
+	 * @param {string}  name     Ability name (e.g. 'sell-my-images/create-checkout').
+	 * @param {Object}  input    Input parameters.
+	 * @param {string}  method   HTTP method ('GET' or 'POST'). Default 'POST'.
+	 * @return {Promise<Object>} Ability output.
+	 */
+	async function runAbility( name, input, method ) {
+		method = method || 'POST';
+
+		const headers = { 'X-WP-Nonce': NONCE };
+		let url = API_BASE + name + '/run';
+		let body = null;
+
+		if ( method === 'GET' ) {
+			// Encode input as query params.
+			const params = new URLSearchParams();
+			if ( input ) {
+				Object.keys( input ).forEach( function( key ) {
+					params.append( 'input[' + key + ']', input[ key ] );
+				} );
+			}
+			url += '?' + params.toString();
+		} else {
+			headers[ 'Content-Type' ] = 'application/json';
+			body = JSON.stringify( { input: input } );
+		}
+
+		const response = await fetch( url, {
+			method: method,
+			headers: headers,
+			body: body,
 		} );
 
 		const data = await response.json();
@@ -117,7 +142,7 @@
 				const result = await runAbility( 'sell-my-images/calculate-prices', {
 					attachment_id: this.currentImage.attachmentId,
 					post_id: this.currentImage.postId,
-				} );
+				}, 'GET' );
 
 				this.renderPricing( result );
 				this.showLoading( false );
@@ -356,7 +381,7 @@
 				try {
 					const result = await runAbility( 'sell-my-images/get-job-status', {
 						job_id: jobId,
-					} );
+					}, 'GET' );
 
 					if ( result.status === 'completed' ) {
 						this.showCompleted( result );

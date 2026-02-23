@@ -224,12 +224,13 @@ class CheckoutAbilities {
 
 		foreach ( $resolutions as $resolution ) {
 			$cost_data = CostCalculator::calculate_cost_detailed( $image_data, $resolution );
-			if ( ! is_wp_error( $cost_data ) ) {
+			if ( ! is_wp_error( $cost_data ) && ! empty( $cost_data['customer_price'] ) ) {
+				$dims = $cost_data['output_dimensions'] ?? array();
 				$prices[] = array(
 					'resolution'    => $resolution,
-					'price'         => $cost_data['price'],
-					'output_width'  => $cost_data['output_width'] ?? null,
-					'output_height' => $cost_data['output_height'] ?? null,
+					'price'         => $cost_data['customer_price'],
+					'output_width'  => $dims['width'] ?? null,
+					'output_height' => $dims['height'] ?? null,
 					'credits'       => $cost_data['credits'] ?? null,
 					'available'     => true,
 				);
