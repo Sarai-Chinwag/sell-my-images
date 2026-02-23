@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.3] - 2026-02-23
+
+### Fixed
+- Handle non-WP_Error return from CostCalculator in price check
+
 ## [1.4.2] - 2026-02-23
 
 ### Fixed
