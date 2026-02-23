@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0] - 2026-02-23
+
+### Changed
+- Replace jQuery AJAX checkout flow with WordPress Abilities API
+- Add duplicate job prevention for create-checkout
+- Remove jQuery dependency from frontend
+
 ## [1.3.4] - 2026-02-17
 
 ### Added
