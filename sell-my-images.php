@@ -61,6 +61,7 @@ class SellMyImages {
      */
     private function init_hooks() {
         add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
+        add_action( 'wp_abilities_api_categories_init', array( $this, 'register_ability_categories' ) );
         add_action( 'init', array( $this, 'init' ) );
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
         // Comparison slider assets now handled by the block itself
@@ -102,6 +103,23 @@ class SellMyImages {
         $this->register_blocks();
     }
     
+    /**
+     * Register the 'content' ability category for all SMI abilities.
+     *
+     * @since 1.3.5
+     */
+    public function register_ability_categories() {
+        if ( function_exists( 'wp_register_ability_category' ) ) {
+            wp_register_ability_category(
+                'content',
+                array(
+                    'label'       => __( 'Content', 'sell-my-images' ),
+                    'description' => __( 'Content management and media operations', 'sell-my-images' ),
+                )
+            );
+        }
+    }
+
     /**
      * Register Gutenberg blocks
      */
