@@ -235,10 +235,11 @@ class CheckoutAbilities {
 					'available'     => true,
 				);
 			} else {
+				$reason = is_wp_error( $cost_data ) ? $cost_data->get_error_message() : 'Price unavailable';
 				$prices[] = array(
 					'resolution' => $resolution,
 					'available'  => false,
-					'reason'     => $cost_data->get_error_message(),
+					'reason'     => $reason,
 				);
 			}
 		}
