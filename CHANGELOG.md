@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.1] - 2026-02-23
+
+### Fixed
+- Move show_in_rest and annotations into meta key for WP_Ability compatibility
+
 ## [1.4.0] - 2026-02-23
 
 ### Changed
