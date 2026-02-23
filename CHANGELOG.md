@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.2] - 2026-02-23
+
+### Fixed
+- HTTP method handling for readonly vs destructive abilities
+- Price field mapping from CostCalculator
+
 ## [1.4.1] - 2026-02-23
 
 ### Fixed
