@@ -98,6 +98,7 @@ class SellMyImages {
         \SellMyImages\Abilities\UploadAbilities::init();
         \SellMyImages\Abilities\AnalyticsAbilities::init();
         \SellMyImages\Abilities\UpscaleAbilities::init();
+        \SellMyImages\Abilities\CheckoutAbilities::init();
         
         // Register blocks
         $this->register_blocks();
@@ -173,7 +174,7 @@ class SellMyImages {
         }
         
         // Use file modification time for asset versioning to auto-bust caches when files change
-        $js_file = SMI_PLUGIN_DIR . 'assets/js/modal.js';
+        $js_file = SMI_PLUGIN_DIR . 'assets/js/checkout.js';
         $css_file = SMI_PLUGIN_DIR . 'assets/css/modal.css';
         $js_version = SMI_VERSION;
         $css_version = SMI_VERSION;
@@ -184,14 +185,21 @@ class SellMyImages {
             $css_version = filemtime( $css_file );
         }
 
-        wp_enqueue_script( 'smi-modal', SMI_PLUGIN_URL . 'assets/js/modal.js', array( 'jquery' ), $js_version, true );
+        // No jQuery dependency — vanilla JS using WordPress Abilities API.
+        wp_enqueue_script( 'smi-checkout', SMI_PLUGIN_URL . 'assets/js/checkout.js', array(), $js_version, true );
         wp_enqueue_style( 'smi-modal', SMI_PLUGIN_URL . 'assets/css/modal.css', array(), $css_version );
-        
-        // Localize script for AJAX
-        wp_localize_script( 'smi-modal', 'smi_ajax', array(
+
+        // Provide REST API settings for the abilities calls.
+        wp_localize_script( 'smi-checkout', 'wpApiSettings', array(
+            'root'  => esc_url_raw( rest_url() ),
+            'nonce' => wp_create_nonce( 'wp_rest' ),
+        ) );
+
+        // Legacy localization kept for backwards compat (templates may reference smi_ajax).
+        wp_localize_script( 'smi-checkout', 'smi_ajax', array(
             'ajax_url' => admin_url( 'admin-ajax.php' ),
             'nonce'    => wp_create_nonce( 'smi_nonce' ),
-            'post_id'  => get_the_ID(), // Add current post ID for JavaScript
+            'post_id'  => get_the_ID(),
             'strings'  => array(
                 'processing' => __( 'Processing...', 'sell-my-images' ),
                 'error'      => __( 'An error occurred. Please try again.', 'sell-my-images' ),
