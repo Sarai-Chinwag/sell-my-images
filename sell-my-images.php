@@ -173,44 +173,24 @@ class SellMyImages {
             return;
         }
         
-        // Use file modification time for asset versioning to auto-bust caches when files change
-        $js_file = SMI_PLUGIN_DIR . 'assets/js/checkout.js';
-        $css_file = SMI_PLUGIN_DIR . 'assets/css/modal.css';
-        $js_version = SMI_VERSION;
-        $css_version = SMI_VERSION;
-        if ( file_exists( $js_file ) ) {
-            $js_version = filemtime( $js_file );
-        }
-        if ( file_exists( $css_file ) ) {
-            $css_version = filemtime( $css_file );
-        }
+        // Built by @wordpress/scripts from src/checkout/index.ts.
+        $checkout_asset_file = SMI_PLUGIN_DIR . 'build/checkout/index.asset.php';
+        $checkout_asset      = file_exists( $checkout_asset_file ) ? require $checkout_asset_file : array( 'dependencies' => array(), 'version' => SMI_VERSION );
 
-        // No jQuery dependency — vanilla JS using WordPress Abilities API.
-        wp_enqueue_script( 'smi-checkout', SMI_PLUGIN_URL . 'assets/js/checkout.js', array(), $js_version, true );
+        wp_enqueue_script(
+            'smi-checkout',
+            SMI_PLUGIN_URL . 'build/checkout/index.js',
+            $checkout_asset['dependencies'],
+            $checkout_asset['version'],
+            true
+        );
+
+        $css_file    = SMI_PLUGIN_DIR . 'assets/css/modal.css';
+        $css_version = file_exists( $css_file ) ? filemtime( $css_file ) : SMI_VERSION;
         wp_enqueue_style( 'smi-modal', SMI_PLUGIN_URL . 'assets/css/modal.css', array(), $css_version );
 
         // Provide REST API settings for the abilities calls.
         wp_localize_script( 'smi-checkout', 'wpApiSettings', array(
-            'root'  => esc_url_raw( rest_url() ),
-            'nonce' => wp_create_nonce( 'wp_rest' ),
-        ) );
-
-        // Legacy localization kept for backwards compat (templates may reference smi_ajax).
-        wp_localize_script( 'smi-checkout', 'smi_ajax', array(
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'smi_nonce' ),
-            'post_id'  => get_the_ID(),
-            'strings'  => array(
-                'processing' => __( 'Processing...', 'sell-my-images' ),
-                'error'      => __( 'An error occurred. Please try again.', 'sell-my-images' ),
-                'download'   => __( 'Download', 'sell-my-images' ),
-            ),
-            'terms_conditions_url' => get_option( 'smi_terms_conditions_url', '' ),
-            'contact_url' => get_option( 'smi_contact_url', home_url( '/contact' ) ),
-        ) );
-        
-        // Add REST API settings for modal JavaScript
-        wp_localize_script( 'smi-modal', 'wpApiSettings', array(
             'root'  => esc_url_raw( rest_url() ),
             'nonce' => wp_create_nonce( 'wp_rest' ),
         ) );

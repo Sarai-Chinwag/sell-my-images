@@ -12,6 +12,7 @@ namespace SellMyImages\Abilities;
 
 use SellMyImages\Managers\JobManager;
 use SellMyImages\Managers\UploadManager;
+use SellMyImages\Config\Constants;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -60,7 +61,7 @@ class UpscaleAbilities {
                         'resolution' => array(
                             'type'        => 'string',
                             'description' => __( 'Upscale factor', 'sell-my-images' ),
-                            'enum'        => array( '2x', '4x', '8x' ),
+                            'enum'        => Constants::VALID_RESOLUTIONS,
                         ),
                     ),
                     'required' => array( 'resolution' ),

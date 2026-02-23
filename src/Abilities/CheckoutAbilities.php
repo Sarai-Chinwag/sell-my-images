@@ -14,6 +14,7 @@ use SellMyImages\Managers\JobManager;
 use SellMyImages\Managers\AnalyticsTracker;
 use SellMyImages\Services\PaymentService;
 use SellMyImages\Api\CostCalculator;
+use SellMyImages\Config\Constants;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -102,7 +103,7 @@ class CheckoutAbilities {
 						'resolution' => array(
 							'type'        => 'string',
 							'description' => __( 'Upscale factor', 'sell-my-images' ),
-							'enum'        => array( '2x', '4x', '8x' ),
+							'enum'        => Constants::VALID_RESOLUTIONS,
 						),
 						'email' => array(
 							'type'        => 'string',
@@ -219,7 +220,7 @@ class CheckoutAbilities {
 			return $image_data;
 		}
 
-		$resolutions = array( '2x', '4x', '8x' );
+		$resolutions = Constants::VALID_RESOLUTIONS;
 		$prices      = array();
 
 		foreach ( $resolutions as $resolution ) {
