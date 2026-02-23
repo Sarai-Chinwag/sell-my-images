@@ -14,6 +14,8 @@ use SellMyImages\Managers\JobManager;
 use SellMyImages\Managers\DownloadManager;
 use SellMyImages\Managers\AnalyticsTracker;
 use SellMyImages\Managers\UploadManager;
+use SellMyImages\Abilities\UpscaleAbilities;
+use SellMyImages\Api\CostCalculator;
 
 // Prevent direct access
 if ( ! defined( 'ABSPATH' ) ) {
@@ -304,20 +306,19 @@ class RestApi {
             return $image_data;
         }
         
-        // Create job record first using JobManager
-        $job_data = JobManager::create_job( array(
-            'image_url'     => $image_data['src'],
+        // Create job using shared UpscaleAbilities method
+        $job_result = UpscaleAbilities::create_upscale_job( array(
+            'attachment_id' => $attachment_id,
             'resolution'    => $resolution,
             'email'         => $email,
             'post_id'       => $post_id,
-            'attachment_id' => $image_data['attachment_id'],
-            'image_width'   => $image_data['width'],
-            'image_height'  => $image_data['height'],
         ) );
         
-        if ( is_wp_error( $job_data ) ) {
-            return $job_data;
+        if ( is_wp_error( $job_result ) ) {
+            return $job_result;
         }
+        
+        $job_data = array( 'job_id' => $job_result['job_id'] );
         
         // Store cost data in job record
         $cost_data = CostCalculator::calculate_cost_detailed( $image_data, $resolution );
@@ -605,34 +606,31 @@ class RestApi {
             $email = null;
         }
         
-        // Get upload data
+        // Get upload data for pricing calculation
         $upload = UploadManager::get_upload( $upload_id );
         if ( is_wp_error( $upload ) ) {
             return $upload;
         }
         
-        // Convert upload data to image data format
+        // Convert upload data to image data format for pricing
         $image_data = array(
             'width' => $upload['width'],
             'height' => $upload['height'],
         );
         
-        // Create job record with source_type='upload'
-        $job_data = JobManager::create_job( array(
-            'image_url'         => $upload['file_path'], // Store local path as image_url
-            'resolution'        => $resolution,
-            'email'             => $email,
-            'post_id'           => 0, // No post associated with uploads
-            'attachment_id'     => null,
-            'image_width'       => $upload['width'],
-            'image_height'      => $upload['height'],
-            'source_type'       => 'upload',
-            'upload_file_path'  => $upload['file_path'],
+        // Create job using shared UpscaleAbilities method
+        $job_result = UpscaleAbilities::create_upscale_job( array(
+            'upload_id'  => $upload_id,
+            'resolution' => $resolution,
+            'email'      => $email,
+            'post_id'    => 0, // No post associated with uploads
         ) );
         
-        if ( is_wp_error( $job_data ) ) {
-            return $job_data;
+        if ( is_wp_error( $job_result ) ) {
+            return $job_result;
         }
+        
+        $job_data = array( 'job_id' => $job_result['job_id'] );
         
         // Store cost data in job record
         $cost_data = CostCalculator::calculate_cost_detailed( $image_data, $resolution );
