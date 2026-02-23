@@ -46,8 +46,7 @@ class CheckoutAbilities {
 				'label'               => __( 'Calculate Image Prices', 'sell-my-images' ),
 				'description'         => __( 'Calculate upscaling prices for all resolution options of a given image attachment.', 'sell-my-images' ),
 				'category'            => 'content',
-				'show_in_rest'        => true,
-				'annotations'         => array( 'readonly' => true ),
+				'meta' => array( 'show_in_rest' => true, 'annotations' => array( 'readonly' => true ) ),
 				'execute_callback'    => array( __CLASS__, 'calculate_prices' ),
 				'permission_callback' => '__return_true',
 				'input_schema'        => array(
@@ -86,8 +85,7 @@ class CheckoutAbilities {
 				'label'               => __( 'Create Checkout Session', 'sell-my-images' ),
 				'description'         => __( 'Create a Stripe checkout session for image upscaling. Includes duplicate prevention — reuses existing pending jobs for the same image+resolution.', 'sell-my-images' ),
 				'category'            => 'content',
-				'show_in_rest'        => true,
-				'annotations'         => array( 'destructive' => true ),
+				'meta' => array( 'show_in_rest' => true, 'annotations' => array( 'destructive' => true ) ),
 				'execute_callback'    => array( __CLASS__, 'create_checkout' ),
 				'permission_callback' => '__return_true',
 				'input_schema'        => array(
@@ -143,8 +141,7 @@ class CheckoutAbilities {
 				'label'               => __( 'Get Job Status', 'sell-my-images' ),
 				'description'         => __( 'Check the status of an image upscaling job.', 'sell-my-images' ),
 				'category'            => 'content',
-				'show_in_rest'        => true,
-				'annotations'         => array( 'readonly' => true ),
+				'meta' => array( 'show_in_rest' => true, 'annotations' => array( 'readonly' => true ) ),
 				'execute_callback'    => array( __CLASS__, 'get_job_status' ),
 				'permission_callback' => '__return_true',
 				'input_schema'        => array(
@@ -179,8 +176,7 @@ class CheckoutAbilities {
 				'label'               => __( 'Track Button Click', 'sell-my-images' ),
 				'description'         => __( 'Track an image buy button click for analytics.', 'sell-my-images' ),
 				'category'            => 'content',
-				'show_in_rest'        => true,
-				'annotations'         => array( 'destructive' => true ),
+				'meta' => array( 'show_in_rest' => true, 'annotations' => array( 'destructive' => true ) ),
 				'execute_callback'    => array( __CLASS__, 'track_click' ),
 				'permission_callback' => '__return_true',
 				'input_schema'        => array(
