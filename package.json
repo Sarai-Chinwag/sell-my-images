@@ -1,6 +1,6 @@
 {
   "name": "sell-my-images",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "Monetize your website images with AI upscaling",
   "scripts": {
     "build": "wp-scripts build",

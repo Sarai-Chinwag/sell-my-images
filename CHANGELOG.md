@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.0] - 2026-02-23
+
+### Removed
+- Legacy jQuery modal.js and AJAX REST endpoints (600+ lines of dead code)
+
 ## [1.4.3] - 2026-02-23
 
 ### Fixed
