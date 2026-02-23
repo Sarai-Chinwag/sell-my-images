@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Remove 2x resolution entirely; refactor checkout to TypeScript built by @wordpress/scripts
+
 ## [1.5.0] - 2026-02-23
 
 ### Removed
