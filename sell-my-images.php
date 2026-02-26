@@ -156,6 +156,11 @@ class SellMyImages {
     private function load_dependencies() {
         // Load Composer autoloader
         require_once SMI_PLUGIN_DIR . 'vendor/autoload.php';
+
+        // Register WP-CLI commands
+        if ( defined( 'WP_CLI' ) && WP_CLI ) {
+            \WP_CLI::add_command( 'smi revenue', \SellMyImages\Cli\RevenueCommand::class );
+        }
     }
     
     public function enqueue_frontend_assets() {
