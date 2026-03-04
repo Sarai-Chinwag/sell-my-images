@@ -60,7 +60,7 @@ class AnalyticsPage {
         // Validate orderby
         if ( isset( $_GET['orderby'] ) ) {
             $orderby = sanitize_text_field( wp_unslash( $_GET['orderby'] ) );
-            $allowed_orderby = array( 'revenue', 'profit', 'sales', 'clicks', 'conversion', 'date', 'title' );
+            $allowed_orderby = array( 'revenue', 'profit', 'sales', 'clicks', 'conversion', 'pageviews', 'ctr', 'date', 'title' );
             if ( in_array( $orderby, $allowed_orderby, true ) ) {
                 $params['orderby'] = $orderby;
             }
@@ -138,6 +138,19 @@ class AnalyticsPage {
         // Merge click-only posts with sales data
         $combined_data = array_merge( $analytics_data, $click_only_posts );
         
+        // Hydrate pageviews and CTR for click-only posts (sales posts already have these from organize_analytics_data)
+        $click_only_ids = array_map( function( $p ) { return $p->post_id; }, $click_only_posts );
+        if ( ! empty( $click_only_ids ) ) {
+            $click_only_views = $this->get_pageviews_for_posts( $click_only_ids );
+            foreach ( $combined_data as $post_data ) {
+                if ( ! isset( $post_data->pageviews ) ) {
+                    $post_data->pageviews = $click_only_views[ $post_data->post_id ] ?? 0;
+                    $post_data->ctr = $post_data->pageviews > 0 ? 
+                        ( ( $post_data->total_clicks ?: 0 ) / $post_data->pageviews ) * 100 : 0;
+                }
+            }
+        }
+        
         // Apply sorting
         $combined_data = $this->sort_analytics_data( $combined_data, $params );
         
@@ -198,6 +211,10 @@ class AnalyticsPage {
                 return isset($post_data->total_clicks) ? $post_data->total_clicks : 0;
             case 'conversion':
                 return $post_data->conversion_rate ?: 0;
+            case 'pageviews':
+                return $post_data->pageviews ?: 0;
+            case 'ctr':
+                return $post_data->ctr ?: 0;
             case 'date':
                 return strtotime( $post_data->post_date ?: '1970-01-01' );
             case 'title':
@@ -309,8 +326,12 @@ class AnalyticsPage {
             }
         }
         
+        // Batch-fetch pageviews for all posts
+        $post_ids = array_keys( $organized );
+        $pageviews_by_post = $this->get_pageviews_for_posts( $post_ids );
+        
         // Calculate averages and finalize
-        foreach ( $organized as $post_data ) {
+        foreach ( $organized as $post_id => $post_data ) {
             $post_data->avg_sale_price = $post_data->total_sales > 0 ? 
                 $post_data->total_revenue / $post_data->total_sales : 0;
             $post_data->avg_cost = $post_data->total_sales > 0 ? 
@@ -320,6 +341,11 @@ class AnalyticsPage {
             // Calculate post-level conversion rate (total sales / total clicks)
             $post_data->conversion_rate = $post_data->total_clicks > 0 ? 
                 ( $post_data->total_sales / $post_data->total_clicks ) * 100 : 0;
+            
+            // Add pageviews and CTR (clicks / pageviews * 100)
+            $post_data->pageviews = $pageviews_by_post[ $post_id ] ?? 0;
+            $post_data->ctr = $post_data->pageviews > 0 ? 
+                ( ( $post_data->total_clicks ?: 0 ) / $post_data->pageviews ) * 100 : 0;
         }
         
         // Sort by total revenue (descending)
@@ -407,6 +433,10 @@ class AnalyticsPage {
         </div>
         
         
+        <style>
+        .smi-low-ctr { color: #d63638; }
+        </style>
+        
         <script>
         jQuery(document).ready(function($) {
             $('.smi-post-header').click(function() {
@@ -438,6 +468,8 @@ class AnalyticsPage {
                     <option value="sales" <?php selected( $params['orderby'], 'sales' ); ?>><?php esc_html_e( 'Sales Count', 'sell-my-images' ); ?></option>
                     <option value="clicks" <?php selected( $params['orderby'], 'clicks' ); ?>><?php esc_html_e( 'Click Count', 'sell-my-images' ); ?></option>
                     <option value="conversion" <?php selected( $params['orderby'], 'conversion' ); ?>><?php esc_html_e( 'Conversion Rate', 'sell-my-images' ); ?></option>
+                    <option value="pageviews" <?php selected( $params['orderby'], 'pageviews' ); ?>><?php esc_html_e( 'Pageviews', 'sell-my-images' ); ?></option>
+                    <option value="ctr" <?php selected( $params['orderby'], 'ctr' ); ?>><?php esc_html_e( 'Click-Through Rate', 'sell-my-images' ); ?></option>
                     <option value="date" <?php selected( $params['orderby'], 'date' ); ?>><?php esc_html_e( 'Post Date', 'sell-my-images' ); ?></option>
                     <option value="title" <?php selected( $params['orderby'], 'title' ); ?>><?php esc_html_e( 'Post Title', 'sell-my-images' ); ?></option>
                 </select>
@@ -647,8 +679,18 @@ class AnalyticsPage {
                                 <small><?php esc_html_e( 'Sales', 'sell-my-images' ); ?></small>
                             </div>
                             <div>
+                                <strong><?php echo esc_html( number_format( $post_data->pageviews ?: 0 ) ); ?></strong><br>
+                                <small><?php esc_html_e( 'Views', 'sell-my-images' ); ?></small>
+                            </div>
+                            <div>
                                 <strong><?php echo esc_html( number_format( $post_data->total_clicks ?: 0 ) ); ?></strong><br>
                                 <small><?php esc_html_e( 'Clicks', 'sell-my-images' ); ?></small>
+                            </div>
+                            <div>
+                                <strong<?php echo ( $post_data->ctr ?: 0 ) < 1.0 && ( $post_data->pageviews ?: 0 ) > 100 ? ' class="smi-low-ctr"' : ''; ?>>
+                                    <?php echo esc_html( number_format( $post_data->ctr ?: 0, 2 ) ); ?>%
+                                </strong><br>
+                                <small><?php esc_html_e( 'CTR', 'sell-my-images' ); ?></small>
                             </div>
                             <div>
                                 <strong>
@@ -792,6 +834,41 @@ class AnalyticsPage {
         }
         
         return $raw_data;
+    }
+    
+    /**
+     * Get pageviews for multiple posts efficiently via _post_views meta
+     * 
+     * Cross-references the theme's view counter (stored as _post_views post meta)
+     * to calculate click-through rates on the analytics page.
+     * 
+     * @param array $post_ids Array of post IDs
+     * @return array Pageviews indexed by post ID
+     */
+    private function get_pageviews_for_posts( $post_ids ) {
+        if ( empty( $post_ids ) ) {
+            return array();
+        }
+        
+        global $wpdb;
+        
+        $post_ids = array_map( 'intval', $post_ids );
+        $placeholders = implode( ',', array_fill( 0, count( $post_ids ), '%d' ) );
+        
+        $results = $wpdb->get_results( $wpdb->prepare(
+            "SELECT post_id, meta_value 
+             FROM {$wpdb->postmeta} 
+             WHERE post_id IN ($placeholders) 
+             AND meta_key = '_post_views'",
+            ...$post_ids
+        ) );
+        
+        $views_by_post = array();
+        foreach ( $results as $row ) {
+            $views_by_post[ $row->post_id ] = intval( $row->meta_value );
+        }
+        
+        return $views_by_post;
     }
     
     /**
