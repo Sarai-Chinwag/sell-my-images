@@ -157,9 +157,13 @@ class SellMyImages {
         // Load Composer autoloader
         require_once SMI_PLUGIN_DIR . 'vendor/autoload.php';
 
+        // Image handler: alt text generation utilities + auto-populate hook
+        require_once SMI_PLUGIN_DIR . 'includes/image-handler.php';
+
         // Register WP-CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             \WP_CLI::add_command( 'smi revenue', \SellMyImages\Cli\RevenueCommand::class );
+            \WP_CLI::add_command( 'smi alt-text', \SellMyImages\Cli\AltTextCommand::class );
         }
     }
     
