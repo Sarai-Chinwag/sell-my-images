@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+## [1.7.1] - 2026-03-08
+
+### Added
+- GA4 event tracking for purchase funnel visibility (smi_unlock_click, smi_modal_open, smi_purchase_start)
+
 ## [1.7.0] - 2026-03-08
 
 ### Added
