@@ -8,6 +8,7 @@
  */
 
 declare const wpApiSettings: { root: string; nonce: string } | undefined;
+declare const smiData: { postId: number; buttonText: string } | undefined;
 
 const API_BASE =
 	( ( typeof wpApiSettings !== 'undefined' && wpApiSettings?.root ) || '/wp-json/' ) +
@@ -92,6 +93,105 @@ function escHtml( str: string ): string {
 	return div.innerHTML;
 }
 
+/* ---------- button injection ---------- */
+
+/**
+ * Scan for .wp-block-image figures and inject "Download Hi-Res" buttons.
+ *
+ * Ported from the original jQuery modal.js injectButtons().
+ * Extracts attachment IDs from wp-image-{id} classes on img, picture, or figure.
+ */
+function injectButtons( root?: Element | null ): void {
+	const postId = ( typeof smiData !== 'undefined' && smiData?.postId ) || 0;
+	const buttonText = ( typeof smiData !== 'undefined' && smiData?.buttonText ) || 'Download Hi-Res';
+
+	if ( ! postId ) return;
+
+	const scope = root || document;
+	const figures = scope.querySelectorAll< HTMLElement >( '.wp-block-image' );
+
+	figures.forEach( ( figure ) => {
+		const img = figure.querySelector< HTMLImageElement >( 'img' );
+
+		// Skip if no image or button already exists.
+		if ( ! img || figure.querySelector( '.smi-get-button' ) ) return;
+
+		// Extract attachment ID from wp-image-{id} class.
+		let attachmentId: string | null = null;
+
+		// First try: img class.
+		const imgMatch = ( img.className || '' ).match( /wp-image-(\d+)/ );
+		if ( imgMatch ) {
+			attachmentId = imgMatch[ 1 ];
+		}
+
+		// Second try: picture element class.
+		if ( ! attachmentId ) {
+			const picture = figure.querySelector( 'picture' );
+			if ( picture ) {
+				const picMatch = ( picture.className || '' ).match( /wp-image-(\d+)/ );
+				if ( picMatch ) attachmentId = picMatch[ 1 ];
+			}
+		}
+
+		// Third try: figure element class.
+		if ( ! attachmentId ) {
+			const figMatch = ( figure.className || '' ).match( /wp-image-(\d+)/ );
+			if ( figMatch ) attachmentId = figMatch[ 1 ];
+		}
+
+		if ( ! attachmentId ) return;
+
+		// Get image dimensions and src.
+		const imgSrc = img.getAttribute( 'src' ) || '';
+		const imgWidth = img.naturalWidth || parseInt( img.getAttribute( 'width' ) || '0', 10 );
+		const imgHeight = img.naturalHeight || parseInt( img.getAttribute( 'height' ) || '0', 10 );
+
+		// Create button element.
+		const btn = document.createElement( 'button' );
+		btn.className = 'smi-get-button';
+		btn.dataset.postId = String( postId );
+		btn.dataset.attachmentId = attachmentId;
+		btn.dataset.src = imgSrc;
+		btn.dataset.width = String( imgWidth );
+		btn.dataset.height = String( imgHeight );
+
+		const span = document.createElement( 'span' );
+		span.className = 'smi-button-text';
+		span.textContent = buttonText;
+		btn.appendChild( span );
+
+		figure.appendChild( btn );
+	} );
+}
+
+/**
+ * Watch for dynamically added images (infinite scroll, load-more, etc.)
+ * and re-run button injection when new content appears.
+ */
+function setupDynamicReinit(): void {
+	// Listen for custom events (themes/plugins can trigger re-injection).
+	document.addEventListener( 'smi:refreshButtons', ( ( e: CustomEvent ) => {
+		injectButtons( e.detail?.root || null );
+	} ) as EventListener );
+
+	// Observe common gallery containers for child mutations.
+	const observe = ( selector: string ): void => {
+		const container = document.querySelector( selector );
+		if ( ! container || typeof MutationObserver === 'undefined' ) return;
+
+		let timer: ReturnType< typeof setTimeout > | null = null;
+		const observer = new MutationObserver( () => {
+			if ( timer ) clearTimeout( timer );
+			timer = setTimeout( () => injectButtons( container ), 120 );
+		} );
+		observer.observe( container, { childList: true, subtree: true } );
+	};
+
+	observe( '#post-grid' );
+	observe( '.image-gallery' );
+}
+
 /* ---------- modal ---------- */
 
 const Modal = {
@@ -103,13 +203,15 @@ const Modal = {
 	init(): void {
 		this.el = document.getElementById( 'smi-modal' );
 		if ( ! this.el ) return;
+		injectButtons();
+		setupDynamicReinit();
 		this.bindEvents();
 	},
 
 	bindEvents(): void {
-		// Buy button clicks (delegated).
+		// Download Hi-Res button clicks (delegated).
 		document.addEventListener( 'click', ( e: Event ) => {
-			const btn = ( e.target as HTMLElement ).closest< HTMLElement >( '.smi-buy-button' );
+			const btn = ( e.target as HTMLElement ).closest< HTMLElement >( '.smi-get-button' );
 			if ( btn ) {
 				e.preventDefault();
 				this.open( btn );

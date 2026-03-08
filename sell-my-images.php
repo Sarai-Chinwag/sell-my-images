@@ -203,7 +203,13 @@ class SellMyImages {
             'root'  => esc_url_raw( rest_url() ),
             'nonce' => wp_create_nonce( 'wp_rest' ),
         ) );
-        
+
+        // Provide post context and button text for client-side button injection.
+        wp_localize_script( 'smi-checkout', 'smiData', array(
+            'postId'     => get_the_ID(),
+            'buttonText' => apply_filters( 'smi_button_text', get_option( 'smi_button_text', __( 'Download Hi-Res', 'sell-my-images' ) ) ),
+        ) );
+
         // Output modal HTML to footer
         add_action( 'wp_footer', array( $this, 'output_modal_html' ) );
     }
