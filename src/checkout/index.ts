@@ -10,11 +10,31 @@
 declare const wpApiSettings: { root: string; nonce: string } | undefined;
 declare const smiData: { postId: number; buttonText: string } | undefined;
 
+// GA4 gtag() type declaration
+declare function gtag( event: 'event', eventName: string, params?: Record< string, unknown > ): void;
+
 const API_BASE =
 	( ( typeof wpApiSettings !== 'undefined' && wpApiSettings?.root ) || '/wp-json/' ) +
 	'wp-abilities/v1/abilities/';
 const NONCE =
 	( typeof wpApiSettings !== 'undefined' && wpApiSettings?.nonce ) || '';
+
+/* ---------- GA4 Event Tracking ---------- */
+
+/**
+ * Safely send a GA4 custom event via gtag().
+ * Silently no-ops if gtag is not available (e.g., GA4 not configured).
+ */
+function trackGA4Event( eventName: string, params?: Record< string, unknown > ): void {
+	if ( typeof gtag !== 'function' ) {
+		return;
+	}
+	try {
+		gtag( 'event', eventName, params );
+	} catch {
+		// Silently ignore GA4 errors - analytics should never break the UI.
+	}
+}
 
 /* ---------- types ---------- */
 
@@ -214,6 +234,11 @@ const Modal = {
 			const btn = ( e.target as HTMLElement ).closest< HTMLElement >( '.smi-get-button' );
 			if ( btn ) {
 				e.preventDefault();
+				// Track unlock button click before opening modal.
+				trackGA4Event( 'smi_unlock_click', {
+					post_id: parseInt( btn.dataset.postId || '0', 10 ),
+					image_id: parseInt( btn.dataset.attachmentId || '0', 10 ),
+				} );
 				this.open( btn );
 			}
 		} );
@@ -250,6 +275,11 @@ const Modal = {
 		if ( ! this.currentImage.attachmentId || ! this.currentImage.postId ) return;
 
 		this.show();
+		// Track modal open event after showing.
+		trackGA4Event( 'smi_modal_open', {
+			post_id: this.currentImage.postId,
+			image_id: this.currentImage.attachmentId,
+		} );
 		this.showLoading( true );
 		this.trackClick();
 
@@ -358,6 +388,13 @@ const Modal = {
 		}
 
 		const email = ( this.el!.querySelector< HTMLInputElement >( '#smi-email' )?.value || '' ).trim();
+
+		// Track purchase start event before initiating payment.
+		trackGA4Event( 'smi_purchase_start', {
+			post_id: this.currentImage.postId,
+			image_id: this.currentImage.attachmentId,
+			resolution: selected.value,
+		} );
 
 		this.processing = true;
 		this.clearError();
