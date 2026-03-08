@@ -53,6 +53,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                     <div class="smi-option-details">Perfect for prints and web</div>
                                 </div>
                                 <div class="smi-option-price">Calculating...</div>
+                                <div class="smi-option-dims"></div>
                             </label>
                             
                             <label class="smi-option" for="smi-resolution-8x">
@@ -62,6 +63,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                     <div class="smi-option-details">Professional print quality</div>
                                 </div>
                                 <div class="smi-option-price">Calculating...</div>
+                                <div class="smi-option-dims"></div>
                             </label>
                             
                         </div>

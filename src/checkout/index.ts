@@ -307,43 +307,44 @@ const Modal = {
 		if ( ! main || ! this.currentImage ) return;
 
 		const img = this.currentImage;
-		// Only show available prices (2x should never come back, but filter just in case).
 		const available = data.prices.filter( ( p ) => p.available );
 
-		let html = '<div class="smi-image-preview">';
-		html += `<img src="${ escHtml( img.src ) }" alt="Preview" />`;
-		html += `<p class="smi-image-dimensions">${ img.width } × ${ img.height }</p>`;
-		html += '</div>';
+		// Update preview image.
+		const previewImg = main.querySelector< HTMLImageElement >( '.smi-preview-image' );
+		if ( previewImg ) {
+			previewImg.src = img.src;
+			previewImg.alt = 'Preview';
+		}
 
-		html += '<div class="smi-options"><h3>Select Resolution</h3>';
+		// Update resolution options with prices and dimensions.
+		available.forEach( ( price ) => {
+			const radio = main.querySelector< HTMLInputElement >( `input[name="resolution"][value="${ price.resolution }"]` );
+			if ( ! radio ) return;
 
-		available.forEach( ( price, i ) => {
-			const checked = i === 0 ? 'checked' : '';
-			html += '<label class="smi-option">';
-			html += `<input type="radio" name="resolution" value="${ price.resolution }" ${ checked }`;
-			html += ` data-price="${ price.price || 0 }"`;
-			html += ` data-output-width="${ price.output_width || '' }"`;
-			html += ` data-output-height="${ price.output_height || '' }">`;
-			html += `<span class="smi-option-label">${ price.resolution }</span>`;
-			html += `<span class="smi-option-price">$${ parseFloat( String( price.price ) ).toFixed( 2 ) }</span>`;
-			if ( price.output_width && price.output_height ) {
-				html += `<span class="smi-option-dims">${ price.output_width } × ${ price.output_height }</span>`;
+			// Store price/dims as data attributes.
+			radio.dataset.price = String( price.price || 0 );
+			if ( price.output_width ) radio.dataset.outputWidth = String( price.output_width );
+			if ( price.output_height ) radio.dataset.outputHeight = String( price.output_height );
+
+			// Update price display.
+			const label = radio.closest( '.smi-option' );
+			if ( label ) {
+				const priceEl = label.querySelector( '.smi-option-price' );
+				if ( priceEl ) {
+					priceEl.textContent = `$${ parseFloat( String( price.price ) ).toFixed( 2 ) }`;
+				}
+				// Update dimensions if available.
+				const dimsEl = label.querySelector( '.smi-option-dims' );
+				if ( dimsEl && price.output_width && price.output_height ) {
+					dimsEl.textContent = `${ price.output_width } × ${ price.output_height }`;
+				}
 			}
-			html += '</label>';
 		} );
 
-		html += '</div>';
+		// Enable checkout button.
+		const checkoutBtn = this.el!.querySelector< HTMLButtonElement >( '.smi-process-btn' );
+		if ( checkoutBtn ) checkoutBtn.disabled = false;
 
-		html += '<div class="smi-email-field">';
-		html += '<label for="smi-email">Email (optional — for delivery confirmation)</label>';
-		html += '<input type="email" id="smi-email" placeholder="your@email.com" />';
-		html += '</div>';
-
-		html += '<div class="smi-button-container">';
-		html += '<button type="button" class="smi-btn smi-btn-primary smi-process-btn">Purchase &amp; Download</button>';
-		html += '</div>';
-
-		main.innerHTML = html;
 		main.classList.remove( 'smi-hidden' );
 	},
 
@@ -410,7 +411,7 @@ const Modal = {
 		const btn = this.el!.querySelector< HTMLButtonElement >( '.smi-process-btn' );
 		if ( btn ) {
 			btn.disabled = false;
-			btn.textContent = 'Purchase & Download';
+			btn.textContent = 'Checkout with Stripe';
 		}
 	},
 
