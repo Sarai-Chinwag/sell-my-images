@@ -3,7 +3,7 @@
  * Plugin Name: Sell My Images
  * Plugin URI: https://chubes.net/
  * Description: Monetize your website images by selling high-resolution versions with AI upscaling and secure payment processing. Perfect for photographers, bloggers, and content creators.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Author: Chris Huber
  * Author URI: https://chubes.net/
  * License: GPL v2 or later

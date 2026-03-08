@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.7.0] - 2026-03-08
+
+### Added
+- Auto-generate alt text for image attachments
+- add Pageviews, CTR columns and sort options to AnalyticsPage
+
+### Changed
+- Add CSS for resolution dimensions display in modal
+- add CSS for .smi-option-dims resolution display
+- Add WP-CLI revenue report command (wp smi revenue)
+
+### Fixed
+- Restore Download Hi-Res button injection lost in TypeScript refactor
+- Fix class name mismatch (.smi-buy-button → .smi-get-button)
+- Fix modal replacing template with duplicate Purchase & Download button
+- modal now updates template instead of replacing it
+- restore button injection lost in TypeScript refactor
+
 ## [1.6.0] - 2026-02-23
 
 - Remove 2x resolution entirely; refactor checkout to TypeScript built by @wordpress/scripts
