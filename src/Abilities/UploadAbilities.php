@@ -199,7 +199,7 @@ class UploadAbilities {
      * Permission callback - check if user can manage SMI
      */
     public static function can_manage(): bool {
-        return current_user_can( 'manage_options' );
+        return PermissionHelper::can_manage();
     }
 
     /**
